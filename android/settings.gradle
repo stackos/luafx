@@ -1,0 +1,2 @@
+include ':app', ':oflite'
+rootProject.name='ofl_camera'
