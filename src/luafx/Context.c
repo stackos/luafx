@@ -222,7 +222,7 @@ void LFX_Context_Done(LFX_Context* thiz)
         glDeleteVertexArrays(1, (GLuint*) &thiz->default_vao);
     }
 
-    LFX_LOGI("OF-LITE Context Done");
+    LFX_LOGI("Context Done");
 }
 
 LFX_RESULT LFX_Context_LoadTexture2D(LFX_Context* thiz, const char* path, LFX_Texture* texture)

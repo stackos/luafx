@@ -6,7 +6,7 @@
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
-    const char* name = "oflite_editor";
+    const char* name = "luafx_editor";
     NSRect rect = NSMakeRect(0, 0, 1280, 720);
     int style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
     NSRect frame = [NSWindow frameRectForContentRect:rect styleMask:style];
