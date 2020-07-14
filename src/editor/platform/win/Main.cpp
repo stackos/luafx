@@ -93,9 +93,9 @@ static void DoneGLContext()
 
 static void ResizeWindow(int input_width, int input_height)
 {
-    const int MAX_W = GetSystemMetrics(SM_CXSCREEN) - 3;
-    const int MAX_H = (GetSystemMetrics(SM_CYSCREEN) - 86) - 2;
-    int w = input_width * 2;
+    const int MAX_W = GetSystemMetrics(SM_CXSCREEN);
+    const int MAX_H = (GetSystemMetrics(SM_CYSCREEN) - 86);
+    int w = input_width;
     int h = input_height;
     float scale_w = 1.0f;
     float scale_h = 1.0f;
@@ -108,8 +108,8 @@ static void ResizeWindow(int input_width, int input_height)
         scale_h = MAX_H / (float) h;
     }
     float scale = min(scale_w, scale_h);
-    w = (int) (w * scale) + 3; // 3 pixel space
-    h = (int) (h * scale) + 2; // 2 pixel space
+    w = (int) (w * scale);
+    h = (int) (h * scale);
 
     DWORD style = WS_OVERLAPPEDWINDOW;
     DWORD style_ex = 0;
@@ -216,12 +216,9 @@ static bool DrawFrame()
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    int w = (g_gl_context.width - 3) / 2;
-    int h = g_gl_context.height - 2;
-    glViewport(1, 1, w, h);
-    LFX_RenderQuad(g_context, &g_texture_in, NULL);
-
-    glViewport(w + 2, 1, w, h);
+    int w = g_gl_context.width;
+    int h = g_gl_context.height;
+    glViewport(0, 0, w, h);
     LFX_RenderQuad(g_context, &g_texture_out, NULL);
 
     SwapBuffers(g_gl_context.hdc);
