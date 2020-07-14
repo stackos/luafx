@@ -42,6 +42,7 @@
 ** or Windows-specific features on Windows.
 */
 /* #define LUA_USE_C89 */
+#define LUA_USE_C89
 
 
 /*

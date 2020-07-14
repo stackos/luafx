@@ -1,4 +1,4 @@
-package com.oflite.app.utils;
+package com.luafx.app.utils;
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;

@@ -1,4 +1,4 @@
-package com.oflite.app;
+package com.luafx.app;
 
 import android.Manifest;
 import android.app.Activity;
@@ -12,10 +12,10 @@ import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.oflite.app.utils.CameraUtil;
-import com.oflite.app.utils.CameraView;
-import com.oflite.app.utils.GLTexture;
-import com.oflite.lib.OFLite;
+import com.luafx.app.utils.CameraUtil;
+import com.luafx.app.utils.CameraView;
+import com.luafx.app.utils.GLTexture;
+import com.luafx.lib.LuaFX;
 
 import java.io.File;
 
@@ -31,10 +31,10 @@ public class MainActivity extends Activity {
     private int mFrameCount = 0;
     private long mFrameTime = 0;
 
-    private int mOFLContext = OFLite.OFL_INVALID_HANDLE;
-    private int mEffect = OFLite.OFL_INVALID_HANDLE;
-    private OFLite.OFL_Texture mTextureIn = new OFLite.OFL_Texture();
-    private OFLite.OFL_Texture mTextureOut = new OFLite.OFL_Texture();
+    private int mContext = LuaFX.LFX_INVALID_HANDLE;
+    private int mEffect = LuaFX.LFX_INVALID_HANDLE;
+    private LuaFX.LFX_Texture mTextureIn = new LuaFX.LFX_Texture();
+    private LuaFX.LFX_Texture mTextureOut = new LuaFX.LFX_Texture();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,12 +100,12 @@ public class MainActivity extends Activity {
             if (!dstDirFile.exists()) {
                 dstDirFile.mkdirs();
             }
-            OFLite.extractAssetsDir(getAssets(), dirs[i], dstDir);
+            LuaFX.extractAssetsDir(getAssets(), dirs[i], dstDir);
         }
     }
 
     private void setCameraView() {
-        extractAssetsDirs(new String[] { "assets", "assets/sticker" });
+        extractAssetsDirs(new String[] { "assets", "assets/demo", "assets/input", "assets/lua_lib" });
 
         mLayout = new RelativeLayout(this);
         mCameraView = new CameraView(this);
@@ -119,7 +119,7 @@ public class MainActivity extends Activity {
                     return;
                 }
 
-                if (mEffect != OFLite.OFL_INVALID_HANDLE) {
+                if (mEffect != LuaFX.LFX_INVALID_HANDLE) {
                     mTextureIn.id = textureIn.getTextureId();
                     mTextureIn.target = textureIn.getTarget();
                     mTextureIn.format = textureIn.getFormat();
@@ -136,11 +136,7 @@ public class MainActivity extends Activity {
                     mTextureOut.filterMode = GLES20.GL_LINEAR;
                     mTextureOut.wrapMode = GLES20.GL_CLAMP_TO_EDGE;
 
-                    OFLite.OFL_FaceData faceData = new OFLite.OFL_FaceData();
-                    faceData.faceCount = 1;
-                    OFLite.headPoseEstimate(mOFLContext, faceData);
-
-                    OFLite.renderEffect(mOFLContext, mEffect, mTextureIn, mTextureOut, null);
+                    LuaFX.renderEffect(mContext, mEffect, mTextureIn, mTextureOut, null);
                 } else {
                     mCameraView.copyTexture(textureIn, textureOut);
                 }
@@ -161,18 +157,18 @@ public class MainActivity extends Activity {
                 Log.i(TAG, "onInit");
 
                 int[] arr = new int[1];
-                int ret = OFLite.createContext(arr);
-                if (ret != OFLite.OFL_SUCCESS) {
-                    Log.e(TAG, "ofl error: " + ret);
+                int ret = LuaFX.createContext(arr);
+                if (ret != LuaFX.LFX_SUCCESS) {
+                    Log.e(TAG, "luafx error: " + ret);
                     return;
                 }
 
-                mOFLContext = arr[0];
+                mContext = arr[0];
 
-                String effectPath = getFilesDir().getPath() + "/assets/effect.ofeffect";
-                ret = OFLite.loadEffect(mOFLContext, effectPath, arr);
-                if (ret != OFLite.OFL_SUCCESS) {
-                    Log.e(TAG, "ofl error: " + ret);
+                String effectPath = getFilesDir().getPath() + "/assets/effect.lua";
+                ret = LuaFX.loadEffect(mContext, effectPath, arr);
+                if (ret != LuaFX.LFX_SUCCESS) {
+                    Log.e(TAG, "luafx error: " + ret);
                     return;
                 }
 
@@ -188,14 +184,14 @@ public class MainActivity extends Activity {
                     mDialog = null;
                 }
 
-                if (mEffect != OFLite.OFL_INVALID_HANDLE) {
-                    OFLite.destroyEffect(mOFLContext, mEffect);
-                    mEffect = OFLite.OFL_INVALID_HANDLE;
+                if (mEffect != LuaFX.LFX_INVALID_HANDLE) {
+                    LuaFX.destroyEffect(mContext, mEffect);
+                    mEffect = LuaFX.LFX_INVALID_HANDLE;
                 }
 
-                if (mOFLContext != OFLite.OFL_INVALID_HANDLE) {
-                    OFLite.destroyContext(mOFLContext);
-                    mOFLContext = OFLite.OFL_INVALID_HANDLE;
+                if (mContext != LuaFX.LFX_INVALID_HANDLE) {
+                    LuaFX.destroyContext(mContext);
+                    mContext = LuaFX.LFX_INVALID_HANDLE;
                 }
             }
         });

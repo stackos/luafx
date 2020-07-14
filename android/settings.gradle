@@ -1,2 +1,2 @@
-include ':app', ':oflite'
-rootProject.name='ofl_camera'
+include ':app', ':luafx'
+rootProject.name='luafx_camera'
