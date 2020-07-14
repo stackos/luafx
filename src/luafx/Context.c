@@ -184,11 +184,6 @@ LFX_RESULT LFX_Context_Init(LFX_Context* thiz)
         glBindVertexArray(thiz->default_vao);
     }
 
-    if (thiz->gl_es == 0)
-    {
-        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    }
-
     return LFX_SUCCESS;
 }
 

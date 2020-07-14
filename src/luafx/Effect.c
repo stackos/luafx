@@ -105,7 +105,7 @@ LFX_RESULT LFX_Effect_Load(LFX_Effect* thiz, const char* path)
     char* lua_data = NULL;
     int lua_data_size = 0;
 
-    LFX_RESULT ret = LFX_Context_LoadFile(thiz->context, thiz->lua_path, &lua_data, &lua_data_size);
+    LFX_RESULT ret = LFX_Context_LoadFile(thiz->context, thiz->lua_path, (void*) &lua_data, &lua_data_size);
     if (ret != LFX_SUCCESS)
     {
         return ret;

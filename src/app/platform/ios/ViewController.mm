@@ -1,6 +1,6 @@
 #import "ViewController.h"
 #include "gl_include.h"
-#include "oflite.h"
+#include "luafx.h"
 #include <assert.h>
 
 // View
@@ -56,10 +56,10 @@
     FrameHandler* m_frame_handler;
     CADisplayLink* m_display_link;
     UIDeviceOrientation m_orientation;
-    int m_ofl_context;
-    int m_ofl_effect;
-    OFL_Texture m_texture_in;
-    OFL_Texture m_texture_out;
+    int m_context;
+    int m_effect;
+    LFX_Texture m_texture_in;
+    LFX_Texture m_texture_out;
     void* m_image_in;
     void* m_image_out;
 }
@@ -68,7 +68,7 @@
     self.view = [View new];
     
     [self initGL];
-    [self initOFLContext];
+    [self initContext];
     
     m_frame_handler = [FrameHandler new];
     m_frame_handler.vc = self;
@@ -113,7 +113,7 @@
 - (void)dealloc {
     [NSNotificationCenter.defaultCenter removeObserver:self];
     
-    [self doneOFLContext];
+    [self doneContext];
     
     glDeleteFramebuffers(1, &m_frame_buffer);
     glDeleteRenderbuffers(1, &m_render_buffer);
@@ -130,30 +130,30 @@
 }
 
 - (void)drawFrame {
-    OFL_RenderEffect(m_ofl_context, m_ofl_effect, &m_texture_in, &m_texture_out, m_image_out);
+    LFX_RenderEffect(m_context, m_effect, &m_texture_in, &m_texture_out, m_image_out);
 
     glBindFramebuffer(GL_FRAMEBUFFER, m_frame_buffer);
     glViewport(0, 0, m_target_width, m_target_height);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    OFL_RenderQuad(m_ofl_context, &m_texture_out, NULL);
+    LFX_RenderQuad(m_context, &m_texture_out, NULL);
     
     glBindRenderbuffer(GL_RENDERBUFFER, m_render_buffer);
     [m_gl_context presentRenderbuffer:GL_RENDERBUFFER];
 }
 
-- (void)initOFLContext {
+- (void)initContext {
     const char* res_dir = [[[NSBundle mainBundle] resourcePath] UTF8String];
     
-    OFL_CreateContext(&m_ofl_context);
+    LFX_CreateContext(&m_context);
     
-    OFL_Path path;
-    sprintf(path, "%s/%s", res_dir, "assets/effect.ofeffect");
-    OFL_LoadEffect(m_ofl_context, path, &m_ofl_effect);
+    LFX_Path path;
+    sprintf(path, "%s/%s", res_dir, "assets/effect.lua");
+    LFX_LoadEffect(m_context, path, &m_effect);
     
-    sprintf(path, "%s/%s", res_dir, "assets/1080x1920.jpg");
-    OFL_LoadTexture2D(m_ofl_context, path, &m_texture_in);
+    sprintf(path, "%s/%s", res_dir, "assets/input/1080x1920.jpg");
+    LFX_LoadTexture2D(m_context, path, &m_texture_in);
     
     m_image_in = malloc(m_texture_in.width * m_texture_in.height * 4);
     GLuint fbo = 0;
@@ -171,18 +171,18 @@
     m_texture_out.height = m_texture_in.height;
     m_texture_out.filter_mode = GL_LINEAR;
     m_texture_out.wrap_mode = GL_CLAMP_TO_EDGE;
-    OFL_CreateTexture(m_ofl_context, &m_texture_out);
+    LFX_CreateTexture(m_context, &m_texture_out);
     
     m_image_out = malloc(m_texture_out.width * m_texture_out.height * 4);
 }
 
-- (void)doneOFLContext {
+- (void)doneContext {
     free(m_image_in);
     free(m_image_out);
-    OFL_DestroyTexture(m_ofl_context, &m_texture_in);
-    OFL_DestroyTexture(m_ofl_context, &m_texture_out);
-    OFL_DestroyEffect(m_ofl_context, m_ofl_effect);
-    OFL_DestroyContext(m_ofl_context);
+    LFX_DestroyTexture(m_context, &m_texture_in);
+    LFX_DestroyTexture(m_context, &m_texture_out);
+    LFX_DestroyEffect(m_context, m_effect);
+    LFX_DestroyContext(m_context);
 }
 
 @end
