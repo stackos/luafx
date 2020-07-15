@@ -98,12 +98,9 @@
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    int w = (m_target_width - 3) / 2;
-    int h = m_target_height - 2;
-    glViewport(1, 1, w, h);
-    LFX_RenderQuad(m_context, &m_texture_in, NULL);
-
-    glViewport(w + 2, 1, w, h);
+    int w = m_target_width;
+    int h = m_target_height;
+    glViewport(0, 0, w, h);
     LFX_RenderQuad(m_context, &m_texture_out, NULL);
     
     [_gl_context flushBuffer];
@@ -159,7 +156,7 @@
     
     const int MAX_W = screen_rect.size.width;
     const int MAX_H = screen_rect.size.height;
-    int w = input_width * 2;
+    int w = input_width;
     int h = input_height;
     float scale_w = 1.0f;
     float scale_h = 1.0f;
@@ -172,8 +169,8 @@
         scale_h = MAX_H / (float) h;
     }
     float scale = fmin(scale_w, scale_h);
-    w = (int) (w * scale) + 3;
-    h = (int) (h * scale) + 2;
+    w = (int) (w * scale);
+    h = (int) (h * scale);
     
     m_target_width = w;
     m_target_height = h;
