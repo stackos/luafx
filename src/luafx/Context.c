@@ -11,7 +11,7 @@
 #include <Windows.h>
 #endif
 
-#if defined(LFX_ANDROID) || defined(LFX_MAC) || defined(LFX_IOS)
+#if defined(LFX_ANDROID) || defined(LFX_MAC) || defined(LFX_IOS) || defined(LFX_WASM)
 #include <sys/stat.h>
 #endif
 
@@ -687,7 +687,7 @@ LFX_RESULT LFX_Context_GetFileSize(LFX_Context* thiz, const char* path, int* siz
     {
         *size = (int) file_size.QuadPart;
     }
-#elif defined(LFX_ANDROID) || defined(LFX_MAC) || defined(LFX_IOS)
+#elif defined(LFX_ANDROID) || defined(LFX_MAC) || defined(LFX_IOS) || defined(LFX_WASM)
     struct stat st;
     int ret = stat(path_normalized, &st);
     if (ret != 0)

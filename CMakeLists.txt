@@ -142,6 +142,16 @@ elseif (${Target} MATCHES "Android")
 
     set_property(TARGET ${LFX_TARGET} PROPERTY COMPILE_DEFINITIONS "LFX_STATIC" "CJSON_HIDE_SYMBOLS" "CGLM_ALL_UNALIGNED")
 
+elseif (${Target} MATCHES "WASM")
+    
+    add_library(${LFX_TARGET} STATIC
+                ${LFX_LIB_SRCS}
+                ${LFX_LIB_LUA_SRCS}
+                ${LFX_LIB_CJSON_SRCS}
+                )
+
+    set_property(TARGET ${LFX_TARGET} PROPERTY COMPILE_DEFINITIONS "LFX_STATIC" "CJSON_HIDE_SYMBOLS" "CGLM_ALL_UNALIGNED")
+
 endif ()
 
 if (${CMAKE_VERSION} VERSION_GREATER "3.8.0" )
@@ -309,5 +319,19 @@ elseif (${Target} MATCHES "Android")
                           EGL
                           log
                           android)
+
+elseif (${Target} MATCHES "WASM")
+
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLFX_WASM -Wall")
+    add_definitions(-s WASM=1 -O3)
+
+    add_library(luafx_wasm STATIC
+                ${CMAKE_SOURCE_DIR}/src/app/platform/web/Main.c
+                )
+
+    target_include_directories(luafx_wasm PRIVATE
+                               ${CMAKE_SOURCE_DIR}/include
+                               ${LFX_LIB_SRC_DIR}
+                               )
 
 endif ()

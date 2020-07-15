@@ -189,7 +189,7 @@ LFX_RESULT LFX_Log(LFX_LOG_LEVEL level, const char* format, ...)
         default:
             break;
     }
-#elif defined(LFX_MAC) || defined(LFX_IOS)
+#elif defined(LFX_MAC) || defined(LFX_IOS) || defined(LFX_WASM)
     char* tag = NULL;
         
     switch (level)
