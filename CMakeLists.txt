@@ -332,6 +332,7 @@ elseif (${Target} MATCHES "WASM")
     target_include_directories(luafx_wasm PRIVATE
                                ${CMAKE_SOURCE_DIR}/include
                                ${LFX_LIB_SRC_DIR}
+                               ${CMAKE_SOURCE_DIR}/3rd/cjson
                                )
 
 endif ()

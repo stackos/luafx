@@ -42,8 +42,6 @@ static int g_context = LFX_INVALID_HANDLE;
 static int g_effect = LFX_INVALID_HANDLE;
 static LFX_Texture g_texture_in;
 static LFX_Texture g_texture_out;
-static void* g_image_in = NULL;
-static void* g_image_out = NULL;
 static char* g_message_buffer = NULL;
 static size_t g_message_buffer_size = 0;
 static DWORD g_fps_update_time = 0;
@@ -140,18 +138,8 @@ static void InitEffectContext()
     sprintf(path, "%s/../../../%s", work_dir, "assets/effect.lua");
     LFX_LoadEffect(g_context, path, &g_effect);
 
-    sprintf(path, "%s/../../../%s", work_dir, "assets/input/1080x1920.jpg");
+    sprintf(path, "%s/../../../%s", work_dir, "assets/input/2560x1600.jpg");
     LFX_LoadTexture2D(g_context, path, &g_texture_in);
-
-    g_image_in = malloc(g_texture_in.width * g_texture_in.height * 4);
-    // read texture to image
-    GLuint fbo = 0;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g_texture_in.target, g_texture_in.id, 0);
-    glReadPixels(0, 0, g_texture_in.width, g_texture_in.height, g_texture_in.format, GL_UNSIGNED_BYTE, g_image_in);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteFramebuffers(1, &fbo);
 
     memset(&g_texture_out, 0, sizeof(g_texture_out));
     g_texture_out.target = GL_TEXTURE_2D;
@@ -161,8 +149,6 @@ static void InitEffectContext()
     g_texture_out.filter_mode = GL_LINEAR;
     g_texture_out.wrap_mode = GL_CLAMP_TO_EDGE;
     LFX_CreateTexture(g_context, &g_texture_out);
-
-    g_image_out = malloc(g_texture_out.width * g_texture_out.height * 4);
 
     ResizeWindow(g_texture_in.width, g_texture_in.height);
 
@@ -176,8 +162,6 @@ static void InitEffectContext()
 static void DoneEffectContext()
 {
     free(g_message_buffer);
-    free(g_image_in);
-    free(g_image_out);
     LFX_DestroyTexture(g_context, &g_texture_in);
     LFX_DestroyTexture(g_context, &g_texture_out);
     LFX_DestroyEffect(g_context, g_effect);
@@ -200,25 +184,21 @@ static void SendMessageSetEffectTimestamp()
 {
     int64_t timestamp = timeGetTime() - g_start_time;
 
-    char msg_buffer[1024];
-    sprintf(msg_buffer, "{\"timestamp\": %lld}", timestamp);
+    sprintf(g_message_buffer, "{\"timestamp\": %lld}", timestamp);
 
-    LFX_SendEffectMessage(g_context, g_effect, LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP, msg_buffer, NULL, 0);
+    LFX_SendEffectMessage(g_context, g_effect, LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP, g_message_buffer, NULL, 0);
 }
 
 static bool DrawFrame()
 {
     SendMessageSetEffectTimestamp();
 
-    LFX_RenderEffect(g_context, g_effect, &g_texture_in, &g_texture_out, g_image_out);
+    LFX_RenderEffect(g_context, g_effect, &g_texture_in, &g_texture_out, NULL);
 
     glViewport(0, 0, g_gl_context.width, g_gl_context.height);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    int w = g_gl_context.width;
-    int h = g_gl_context.height;
-    glViewport(0, 0, w, h);
     LFX_RenderQuad(g_context, &g_texture_out, NULL);
 
     SwapBuffers(g_gl_context.hdc);

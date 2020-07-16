@@ -29,7 +29,11 @@ function GetPlatform() {
 }
 
 function Render() {
-    Engine.Update("");
+    const msg = {
+        time: new Date().getTime(),
+    };
+
+    Engine.Update(JSON.stringify(msg));
 
     window.requestAnimationFrame(Render);
 }
@@ -103,7 +107,19 @@ function Main() {
     
     SetCanvasSize(canvas, platform);
 
-    Engine.Init("");
+    const canvas_width = canvas.width;
+    const canvas_height = canvas.height;
+
+    const msg = {
+        name: "luafx",
+        width: canvas_width,
+        height: canvas_height,
+        glesv3: glesv3,
+        platform: platform,
+        time: new Date().getTime(),
+    };
+
+    Engine.Init(JSON.stringify(msg));
 
     Render();
 
