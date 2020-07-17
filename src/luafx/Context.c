@@ -756,6 +756,25 @@ LFX_RESULT LFX_Context_LoadFile(LFX_Context* thiz, const char* path, void** data
     return LFX_SUCCESS;
 }
 
+LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LOAD_FILE_CALLBACK callback)
+{
+    if (path == NULL || callback == NULL)
+    {
+        RETURN_ERR(LFX_INVALID_INPUT);
+    }
+
+#if defined(LFX_WASM)
+    RETURN_ERR(LFX_NO_IMPLEMENT);
+#else
+    void* data = NULL;
+    int size = 0;
+    LFX_RESULT ret = LFX_Context_LoadFile(thiz, path, &data, &size);
+    callback(ret, thiz, path, data, size);
+#endif
+
+    return LFX_SUCCESS;
+}
+
 LFX_RESULT LFX_Context_CheckGLExtension(LFX_Context* thiz, const char* name)
 {
     if (name == NULL)

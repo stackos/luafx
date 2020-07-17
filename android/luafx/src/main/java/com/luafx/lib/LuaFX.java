@@ -26,11 +26,10 @@ public class LuaFX {
     public static final int LFX_MESSAGE_REPLY_BUFFER_NOT_ENOUGH = 17;
     public static final int LFX_JNI_ENV_ERROR = 18;
     public static final int LFX_ASSET_OPEN_FAIL = 19;
-    public static final int LFX_EFFECT_FILE_ERROR = 20;
-    public static final int LFX_EFFECT_VERSION_ERROR = 21;
+    public static final int LFX_NO_IMPLEMENT = 20;
 
     // message id
-    public static final int LFX_MESSAGE_ID_SET_FACE_DATA = -1;
+    public static final int LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP = -1;
 
     public static class LFX_Texture {
         public int id = 0;

@@ -62,6 +62,14 @@ static int lua_LFX_Context_RenderQuad(lua_State* L)
     return 1;
 }
 
+static int lua_LFX_Context_LoadFileAsync(lua_State* L)
+{
+    //LFX_Context* ctx = (LFX_Context*) luaL_checklightuserdata(L, 1);
+    //const char* path = luaL_checkstringstrict(L, 2);
+    
+    return 0;
+}
+
 DEF_FUNC_I_AS(LFX_Context_CheckGLExtension)
 DEF_FUNC_I_AAAA(LFX_Context_GetGLVersion)
 DEF_FUNC_I_ASSA(LFX_Context_CreateProgram)
@@ -78,6 +86,7 @@ static const luaL_Reg context_funcs[] = {
     REG_FUNC(LFX_Context_CreateTexture),
     REG_FUNC(LFX_Context_DestroyTexture),
     REG_FUNC(LFX_Context_RenderQuad),
+    REG_FUNC(LFX_Context_LoadFileAsync),
     REG_FUNC(LFX_Context_CheckGLExtension),
     REG_FUNC(LFX_Context_GetGLVersion),
     REG_FUNC(LFX_Context_CreateProgram),
@@ -87,6 +96,7 @@ static const luaL_Reg context_funcs[] = {
 };
 
 static const DefineReg context_defines[] = {
+    // LFX_RESULT
     REG_DEF(LFX_SUCCESS),
     REG_DEF(LFX_FAIL),
     REG_DEF(LFX_INVALID_CONTEXT),
@@ -107,6 +117,9 @@ static const DefineReg context_defines[] = {
     REG_DEF(LFX_MESSAGE_REPLY_BUFFER_NOT_ENOUGH),
     REG_DEF(LFX_JNI_ENV_ERROR),
     REG_DEF(LFX_ASSET_OPEN_FAIL),
+    REG_DEF(LFX_NO_IMPLEMENT),
+
+    // LFX_MESSAGE_ID
     REG_DEF(LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP),
 };
 
