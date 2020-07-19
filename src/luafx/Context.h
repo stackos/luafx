@@ -34,7 +34,7 @@ typedef struct LFX_Context
     int default_vao;
 } LFX_Context;
 
-typedef void (*LFX_LOAD_FILE_CALLBACK)(LFX_RESULT ret, LFX_Context* thiz, const char* path, void* data, int size);
+typedef void (*LFX_LOAD_FILE_CALLBACK)(LFX_RESULT ret, LFX_Context* thiz, const char* path, void* data, int size, void* user_data);
 
 // public
 LFX_RESULT LFX_Context_Init(LFX_Context* thiz);
@@ -62,6 +62,6 @@ void LFX_Context_NormalizePath(LFX_Context* thiz, char* path);
 LFX_RESULT LFX_Context_CreateProgram(LFX_Context* thiz, const char* vs, const char* fs, int* program);
 LFX_RESULT LFX_Context_GetFileSize(LFX_Context* thiz, const char* path, int* size);
 LFX_RESULT LFX_Context_LoadFile(LFX_Context* thiz, const char* path, void** data, int* size);
-LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LOAD_FILE_CALLBACK callback);
+LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LOAD_FILE_CALLBACK callback, void* user_data);
 LFX_RESULT LFX_Context_CheckGLExtension(LFX_Context* thiz, const char* name);
 LFX_RESULT LFX_Context_GetGLVersion(LFX_Context* thiz, int* major, int* minor, int* is_es);

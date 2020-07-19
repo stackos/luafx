@@ -756,7 +756,7 @@ LFX_RESULT LFX_Context_LoadFile(LFX_Context* thiz, const char* path, void** data
     return LFX_SUCCESS;
 }
 
-LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LOAD_FILE_CALLBACK callback)
+LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LOAD_FILE_CALLBACK callback, void* user_data)
 {
     if (path == NULL || callback == NULL)
     {
@@ -769,7 +769,7 @@ LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LO
     void* data = NULL;
     int size = 0;
     LFX_RESULT ret = LFX_Context_LoadFile(thiz, path, &data, &size);
-    callback(ret, thiz, path, data, size);
+    callback(ret, thiz, path, data, size, user_data);
 #endif
 
     return LFX_SUCCESS;

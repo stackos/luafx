@@ -429,3 +429,9 @@ const char* luaL_checkstringstrict(lua_State* L, int index);
 lua_Integer luaL_checkintegerstrict(lua_State* L, int index);
 const char* lua_pushlstring_long(lua_State* L, const char* s, size_t size);
 void luaL_setintfields(lua_State* L, const DefineReg* fields, int count);
+
+typedef struct LuaCallbackContext
+{
+    lua_State* L;
+    int callback_ref;
+} LuaCallbackContext;

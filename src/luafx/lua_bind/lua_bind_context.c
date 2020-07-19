@@ -62,11 +62,52 @@ static int lua_LFX_Context_RenderQuad(lua_State* L)
     return 1;
 }
 
+static void LoadFileCallback(LFX_RESULT ret, LFX_Context* thiz, const char* path, void* data, int size, void* user_data)
+{
+    LuaCallbackContext* context = user_data;
+    lua_State* L = context->L;
+    lua_rawgeti(L, LUA_REGISTRYINDEX, context->callback_ref);
+    free(context);
+
+    lua_pushinteger(L, ret);
+    lua_pushlightuserdata(L, thiz);
+    lua_pushstring(L, path);
+    lua_pushlightuserdata(L, data);
+    lua_pushinteger(L, size);
+
+    int lua_ret = lua_pcall(L, 5, 0, 0);
+    if (lua_ret != LUA_OK)
+    {
+        size_t len = 0;
+        const char* err = lua_tolstring(L, -1, &len);
+        if (err && len > 0)
+        {
+            LFX_LOGE(err);
+        }
+        lua_pop(L, 1);
+        LFX_LOGE("LFX_LUA_RUN_ERROR");
+    }
+}
+
 static int lua_LFX_Context_LoadFileAsync(lua_State* L)
 {
-    //LFX_Context* ctx = (LFX_Context*) luaL_checklightuserdata(L, 1);
-    //const char* path = luaL_checkstringstrict(L, 2);
-    
+    LFX_Context* ctx = (LFX_Context*) luaL_checklightuserdata(L, 1);
+    const char* path = luaL_checkstringstrict(L, 2);
+    if (lua_isfunction(L, 3))
+    {
+        lua_pushvalue(L, 3);
+        int callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        LuaCallbackContext* context = malloc(sizeof(LuaCallbackContext));
+        context->L = L;
+        context->callback_ref = callback_ref;
+
+        LFX_Context_LoadFileAsync(ctx, path, LoadFileCallback, context);
+    }
+    else
+    {
+        luaL_argerror(L, 3, "lua function expected");
+    }
     return 0;
 }
 
