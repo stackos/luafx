@@ -6,8 +6,8 @@
 // ViewController
  @interface ViewController ()
 
- @property(weak) NSWindow* window;
- @property(weak) NSOpenGLContext* gl_context;
+ @property(nonatomic, weak) NSWindow* window;
+ @property(nonatomic, weak) NSOpenGLContext* gl_context;
 
 - (void)drawFrame;
 
@@ -16,7 +16,7 @@
 // FrameHandler
 @interface FrameHandler : NSObject
 
-@property(weak) ViewController* vc;
+@property(nonatomic, weak) ViewController* vc;
 
 @end
 

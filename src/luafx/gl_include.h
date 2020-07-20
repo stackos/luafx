@@ -5,6 +5,7 @@
 #elif defined(LFX_ANDROID)
 #include "platform/android/gl3stub.h"
 #elif defined(LFX_MAC)
+#define GL_SILENCE_DEPRECATION
 #include "GL/glew.h"
 #elif defined(LFX_IOS)
 #include <OpenGLES/ES3/gl.h>
