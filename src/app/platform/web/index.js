@@ -38,6 +38,37 @@ function Render() {
     window.requestAnimationFrame(Render);
 }
 
+// functions for C call
+function LoadFileAsync(user_data, url) {
+    console.log("LoadFileAsync user_data:" + user_data + " url:" + url);
+
+	const req = new XMLHttpRequest();
+	req.open("GET", url, true);
+	req.responseType = "arraybuffer";
+
+	req.onload = function (event) {
+        if (req.readyState === 4 && req.status === 200) {
+            const buffer = req.response;
+            if (buffer) {
+			    const bytes = new Uint8Array(buffer);
+			    const p = Engine.MemoryAlloc(bytes.length);
+			    Module.HEAP8.set(bytes, p);
+			    Engine.OnLoadFileAsyncComplete(user_data, url, p, bytes.length);
+			    Engine.MemoryFree(p);
+		    } else {
+                Engine.OnLoadFileAsyncComplete(user_data, url, null, 0);
+            }
+        } else {
+            console.log("LoadFileAsync failed in readyState:" + req.readyState, "status:" + req.status);
+
+            Engine.OnLoadFileAsyncComplete(user_data, url, null, 0);
+        }
+	};
+
+	req.send(null);
+}
+//
+
 function InitLoading() {
     const canvas = document.getElementById("canvas2d");
     const c = canvas.getContext("2d");
@@ -74,6 +105,9 @@ function Main() {
     Engine.Init = Module.cwrap("InitEngine", null, ["string"]);
     Engine.Done = Module.cwrap("DoneEngine", null, ["string"]);
     Engine.Update = Module.cwrap("UpdateEngine", null, ["string"]);
+    Engine.MemoryAlloc = Module.cwrap("MemoryAlloc", "number", ["number"]);
+	Engine.MemoryFree = Module.cwrap("MemoryFree", null, ["number"]);
+    Engine.OnLoadFileAsyncComplete = Module.cwrap("OnLoadFileAsyncComplete", null, ["number", "string", "number", "number"]);
 
 	let force_gles2 = true;
     let glesv3 = false;

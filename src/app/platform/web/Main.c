@@ -16,6 +16,16 @@ static int64_t g_fps_update_time = 0;
 static int g_frame_count = 0;
 static int64_t g_start_time = 0;
 
+void* EMSCRIPTEN_KEEPALIVE MemoryAlloc(int size)
+{
+    return malloc(size);
+}
+
+void EMSCRIPTEN_KEEPALIVE MemoryFree(void* p)
+{
+    free(p);
+}
+
 void EMSCRIPTEN_KEEPALIVE InitEngine(const char* msg)
 {
     LFX_LOGI("InitEngine: %s", msg);

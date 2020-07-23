@@ -15,6 +15,10 @@
 #include <sys/stat.h>
 #endif
 
+#if defined(LFX_WASM)
+#include <emscripten.h>
+#endif
+
 #define CHECK_EFFECT(effect) \
     LFX_Effect* eff = (LFX_Effect*) LFX_ObjectPool_GetObject(&thiz->effect_pool, effect); \
     if (eff == NULL) { RETURN_ERR(LFX_INVALID_EFFECT); }
@@ -756,6 +760,33 @@ LFX_RESULT LFX_Context_LoadFile(LFX_Context* thiz, const char* path, void** data
     return LFX_SUCCESS;
 }
 
+#if defined(LFX_WASM)
+typedef struct LoadFileContext
+{
+    LFX_Context* context;
+    LFX_LOAD_FILE_CALLBACK callback;
+    void* user_data;
+} LoadFileContext;
+
+void EMSCRIPTEN_KEEPALIVE OnLoadFileAsyncComplete(void* user_data, const char* url, void* data, int size)
+{
+    LoadFileContext* load = user_data;
+    if (size > 0)
+    {
+        load->callback(LFX_SUCCESS, load->context, url, data, size, load->user_data);
+    }
+    else
+    {
+        load->callback(LFX_FAIL, load->context, url, NULL, 0, load->user_data);
+    }
+    free(load);
+}
+
+EM_JS(void, LoadFileAsyncJS, (void* user_data, const char* url), {
+    LoadFileAsync(user_data, UTF8ToString(url));
+});
+#endif
+
 LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LOAD_FILE_CALLBACK callback, void* user_data)
 {
     if (path == NULL || callback == NULL)
@@ -764,7 +795,12 @@ LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LO
     }
 
 #if defined(LFX_WASM)
-    RETURN_ERR(LFX_NO_IMPLEMENT);
+    LoadFileContext* load = malloc(sizeof(LoadFileContext));
+    load->context = thiz;
+    load->callback = callback;
+    load->user_data = user_data;
+
+    LoadFileAsyncJS(load, path);
 #else
     void* data = NULL;
     int size = 0;
