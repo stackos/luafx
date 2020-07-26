@@ -62,7 +62,7 @@ static int lua_LFX_Context_RenderQuad(lua_State* L)
     return 1;
 }
 
-static void LoadFileCallback(LFX_RESULT ret, LFX_Context* thiz, const char* path, void* data, int size, void* user_data)
+static void LoadFileAsyncCallback(LFX_RESULT ret, LFX_Context* thiz, const char* path, void* data, int size, void* user_data)
 {
     LuaCallbackContext* context = user_data;
     lua_State* L = context->L;
@@ -102,7 +102,7 @@ static int lua_LFX_Context_LoadFileAsync(lua_State* L)
         context->L = L;
         context->callback_ref = callback_ref;
 
-        LFX_Context_LoadFileAsync(ctx, path, LoadFileCallback, context);
+        LFX_Context_LoadFileAsync(ctx, path, LoadFileAsyncCallback, context);
     }
     else
     {
@@ -127,12 +127,12 @@ static const luaL_Reg context_funcs[] = {
     REG_FUNC(LFX_Context_CreateTexture),
     REG_FUNC(LFX_Context_DestroyTexture),
     REG_FUNC(LFX_Context_RenderQuad),
-    REG_FUNC(LFX_Context_LoadFileAsync),
     REG_FUNC(LFX_Context_CheckGLExtension),
     REG_FUNC(LFX_Context_GetGLVersion),
     REG_FUNC(LFX_Context_CreateProgram),
     REG_FUNC(LFX_Context_GetFileSize),
     REG_FUNC(LFX_Context_LoadFile),
+    REG_FUNC(LFX_Context_LoadFileAsync),
     { NULL, NULL }
 };
 
