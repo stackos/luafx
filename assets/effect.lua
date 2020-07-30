@@ -5,11 +5,25 @@ local demo = require("demo/demo_triangle")
 --local demo = require("demo/demo_depth_texture")
 --local demo = require("demo/demo_instance")
 
-local _effect_data = {
+local BuildPlatformNames = {
+    "Windows",
+    "Android",
+    "Mac",
+    "iOS",
+    "WebAssembly"
+}
+
+local _effect = {
     timestamp = 0,
     shared_quad_renderer = require("QuadRenderer"):New(),
 
     Init = function(self, context, effect)
+        local build_platform = LFX_BinaryString(4)
+        LFX_Context_GetBuildPlatform(context, build_platform)
+        local platform = string.unpack("i", build_platform)
+
+        LOGD(string.format("BuildPlatform: %s", BuildPlatformNames[platform + 1]))
+
         self.shared_quad_renderer:Init(context, effect)
 
         demo.Init(context, effect)
@@ -36,23 +50,23 @@ local _effect_data = {
 
 function Effect_Load(context, effect)
     LOGD("Effect_Load")
-    _effect_data:Init(context, effect)
+    _effect:Init(context, effect)
     return LFX_SUCCESS
 end
 
 function Effect_Done(context, effect)
     LOGD("Effect_Done")
-    _effect_data:Done(context, effect)
+    _effect:Done(context, effect)
     return LFX_SUCCESS
 end
 
 function Effect_Render(context, effect, input_texture, output_texture)
-    _effect_data:Render(context, effect, input_texture, output_texture)
+    _effect:Render(context, effect, input_texture, output_texture)
     return LFX_SUCCESS
 end
 
 function Effect_SendMessage(context, effect, message_id, message)
     if message_id == LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP then
-        _effect_data:SetTimestamp(context, effect, message)
+        _effect:SetTimestamp(context, effect, message)
     end
 end

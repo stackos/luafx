@@ -111,11 +111,12 @@ static int lua_LFX_Context_LoadFileAsync(lua_State* L)
     return 0;
 }
 
-DEF_FUNC_I_AS(LFX_Context_CheckGLExtension)
-DEF_FUNC_I_AAAA(LFX_Context_GetGLVersion)
 DEF_FUNC_I_ASSA(LFX_Context_CreateProgram)
 DEF_FUNC_I_ASA(LFX_Context_GetFileSize)
 DEF_FUNC_I_ASAA(LFX_Context_LoadFile)
+DEF_FUNC_I_AS(LFX_Context_CheckGLExtension)
+DEF_FUNC_I_AAAA(LFX_Context_GetGLVersion)
+DEF_FUNC_I_AA(LFX_Context_GetBuildPlatform)
 
 static const luaL_Reg context_funcs[] = {
     REG_FUNC(LOGV),
@@ -127,12 +128,13 @@ static const luaL_Reg context_funcs[] = {
     REG_FUNC(LFX_Context_CreateTexture),
     REG_FUNC(LFX_Context_DestroyTexture),
     REG_FUNC(LFX_Context_RenderQuad),
-    REG_FUNC(LFX_Context_CheckGLExtension),
-    REG_FUNC(LFX_Context_GetGLVersion),
     REG_FUNC(LFX_Context_CreateProgram),
     REG_FUNC(LFX_Context_GetFileSize),
     REG_FUNC(LFX_Context_LoadFile),
     REG_FUNC(LFX_Context_LoadFileAsync),
+    REG_FUNC(LFX_Context_CheckGLExtension),
+    REG_FUNC(LFX_Context_GetGLVersion),
+    REG_FUNC(LFX_Context_GetBuildPlatform),
     { NULL, NULL }
 };
 
@@ -159,6 +161,13 @@ static const DefineReg context_defines[] = {
     REG_DEF(LFX_JNI_ENV_ERROR),
     REG_DEF(LFX_ASSET_OPEN_FAIL),
     REG_DEF(LFX_NO_IMPLEMENT),
+
+    // LFX_BUILD_PLATFORM
+    REG_DEF(LFX_BUILD_PLATFORM_WINDOWS),
+    REG_DEF(LFX_BUILD_PLATFORM_ANDROID),
+    REG_DEF(LFX_BUILD_PLATFORM_MAC),
+    REG_DEF(LFX_BUILD_PLATFORM_IOS),
+    REG_DEF(LFX_BUILD_PLATFORM_WASM),
 
     // LFX_MESSAGE_ID
     REG_DEF(LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP),

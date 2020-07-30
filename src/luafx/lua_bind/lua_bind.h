@@ -119,6 +119,13 @@
     lua_pushinteger(L, (lua_Integer) r); \
     return 1; }
 
+#define DEF_FUNC_I_AA(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    void* p2 = lua_touserdata_or_string(L, 2); \
+    int r = name(p1, p2); \
+    lua_pushinteger(L, (lua_Integer) r); \
+    return 1; }
+
 #define DEF_FUNC_V_IIS(name) static int lua_##name(lua_State* L) { \
     int p1 = (int) luaL_checkintegerstrict(L, 1); \
     int p2 = (int) luaL_checkintegerstrict(L, 2); \

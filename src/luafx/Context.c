@@ -28,6 +28,20 @@ LFX_RESULT LFX_Context_Init(LFX_Context* thiz)
     memset(thiz, 0, sizeof(LFX_Context));
     LFX_ObjectPool_Init(&thiz->effect_pool, sizeof(LFX_Effect));
 
+#if defined(LFX_WINDOWS)
+    thiz->build_platform = LFX_BUILD_PLATFORM_WINDOWS;
+#elif defined(LFX_ANDROID)
+    thiz->build_platform = LFX_BUILD_PLATFORM_ANDROID;
+#elif defined(LFX_MAC)
+    thiz->build_platform = LFX_BUILD_PLATFORM_MAC;
+#elif defined(LFX_IOS)
+    thiz->build_platform = LFX_BUILD_PLATFORM_IOS;
+#elif defined(LFX_WASM)
+    thiz->build_platform = LFX_BUILD_PLATFORM_WASM;
+#else
+    not implement.
+#endif
+
     const char* version = (const char*) glGetString(GL_VERSION);
     const char* vendor = (const char*) glGetString(GL_VENDOR);
     const char* renderer = (const char*) glGetString(GL_RENDERER);
@@ -838,6 +852,18 @@ LFX_RESULT LFX_Context_GetGLVersion(LFX_Context* thiz, int* major, int* minor, i
     *major = thiz->gl_version[0];
     *minor = thiz->gl_version[1];
     *is_es = thiz->gl_es;
+
+    return LFX_SUCCESS;
+}
+
+LFX_RESULT LFX_Context_GetBuildPlatform(LFX_Context* thiz, LFX_BUILD_PLATFORM* platform)
+{
+    if (platform == NULL)
+    {
+        RETURN_ERR(LFX_INVALID_INPUT);
+    }
+
+    *platform = thiz->build_platform;
 
     return LFX_SUCCESS;
 }

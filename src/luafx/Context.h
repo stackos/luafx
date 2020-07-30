@@ -24,6 +24,7 @@ LFX_RESULT LFX_Log(LFX_LOG_LEVEL level, const char* format, ...);
 // class
 typedef struct LFX_Context
 {
+    LFX_BUILD_PLATFORM build_platform;
     int quad_vbo;
     int copy_program;
     LFX_ObjectPool effect_pool;
@@ -65,3 +66,4 @@ LFX_RESULT LFX_Context_LoadFile(LFX_Context* thiz, const char* path, void** data
 LFX_RESULT LFX_Context_LoadFileAsync(LFX_Context* thiz, const char* path, LFX_LOAD_FILE_CALLBACK callback, void* user_data);
 LFX_RESULT LFX_Context_CheckGLExtension(LFX_Context* thiz, const char* name);
 LFX_RESULT LFX_Context_GetGLVersion(LFX_Context* thiz, int* major, int* minor, int* is_es);
+LFX_RESULT LFX_Context_GetBuildPlatform(LFX_Context* thiz, LFX_BUILD_PLATFORM* platform);
