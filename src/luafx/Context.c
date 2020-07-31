@@ -7,6 +7,9 @@
 #define STBI_ONLY_PNG
 #include "stb_image.h"
 
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
+
 #ifdef LFX_WINDOWS
 #include <Windows.h>
 #endif
