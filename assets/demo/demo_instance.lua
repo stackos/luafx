@@ -1,3 +1,5 @@
+local gl = require("gl")
+
 local _vbo = nil
 local _ibo = nil
 local _program = nil
@@ -84,8 +86,7 @@ local DemoInit = function(context, effect)
         }
         ]]
 
-    _program = LFX_BinaryString(4)
-    LFX_Context_CreateProgram(context, vs, fs, _program)
+    _program = gl.CreateProgram(context, vs, fs)
 
     -- depth format
     local major = LFX_BinaryString(4)
@@ -167,8 +168,7 @@ local DemoDone = function(context, effect)
     end
 
     if _program then
-        local p = string.unpack("i", _program)
-        glDeleteProgram(p)
+        gl.DeleteProgram(_program)
     end
 
     if _rbo then
@@ -201,13 +201,12 @@ local function BindDepthBuffer(output_texture)
 end
 
 local DemoRender = function(context, effect, input_texture, output_texture)
-    local p = string.unpack("i", _program)
     local vbo = string.unpack("i", _vbo)
     local ibo = string.unpack("i", _ibo)
 
     -- mvp
     local view = mat4()
-    glm_lookat_lh(vec3(30, 40, -140), vec3(30, 30, 0), vec3(0, 1, 0), view)
+    glm_lookat_lh(vec3(30, 40, -80), vec3(30, 30, 0), vec3(0, 1, 0), view)
     local proj = mat4()
     glm_perspective_lh(glm_rad(45), output_texture.width / output_texture.height, 0.3, 200, proj)
     local vp = mat4()
@@ -235,30 +234,20 @@ local DemoRender = function(context, effect, input_texture, output_texture)
     glClear(GL_DEPTH_BUFFER_BIT)
 
     -- draw
-    glUseProgram(p)
-
-    local loc_vp = glGetUniformLocation(p, "uVP")
-    glUniformMatrix4fv(loc_vp, 1, GL_FALSE, vp)
-    local loc_model = glGetUniformLocation(p, "uModel")
-    glUniformMatrix4fv(loc_model, 1, GL_FALSE, model)
-
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
-
-    local loc_pos = glGetAttribLocation(p, "aPosition")
-    glEnableVertexAttribArray(loc_pos)
-    glVertexAttribPointer(loc_pos, 3, GL_FLOAT, GL_FALSE, 4 * 7, 0)
-    local loc_color = glGetAttribLocation(p, "aColor")
-    glEnableVertexAttribArray(loc_color)
-    glVertexAttribPointer(loc_color, 4, GL_FLOAT, GL_FALSE, 4 * 7, 4 * 3)
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
+
+    gl.UseProgram(_program)
+    gl.UniformMatrix(_program, "uVP", vp)
+    gl.UniformMatrix(_program, "uModel", model)
+    gl.VertexAttrib(_program, "aPosition", 3, 4 * 7, 0)
+    gl.VertexAttrib(_program, "aColor", 4, 4 * 7, 4 * 3)
 
     if _support_instance or _support_instance_ext then
         local vbo_instance = string.unpack("i", _vbo_instance)
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance)
-        local loc_pos_instance = glGetAttribLocation(p, "aPositionInstance")
-        glEnableVertexAttribArray(loc_pos_instance)
-        glVertexAttribPointer(loc_pos_instance, 3, GL_FLOAT, GL_FALSE, 0, 0)
+
+        gl.VertexAttrib(_program, "aPositionInstance", 3, 0, 0)
 
         local VertexAttribDivisor = nil
         local DrawElementsInstanced = nil
@@ -270,16 +259,13 @@ local DemoRender = function(context, effect, input_texture, output_texture)
             DrawElementsInstanced = glDrawElementsInstancedEXT
         end
 
-        VertexAttribDivisor(loc_pos_instance, 1)
+        VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 1)
         DrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0, 40 * 40)
-
-        VertexAttribDivisor(loc_pos_instance, 0)
-        glDisableVertexAttribArray(loc_pos_instance)
+        VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 0)
     end
 
     -- restore
-    glDisableVertexAttribArray(loc_pos)
-    glDisableVertexAttribArray(loc_color)
+    gl.DisableVertexAttribs(_program)
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0)
 

@@ -1,3 +1,5 @@
+local gl = require("gl")
+
 local _vbo = nil
 local _ibo = nil
 local _program = nil
@@ -56,8 +58,7 @@ local DemoInit = function(context, effect)
         }
         ]]
 
-    _program = LFX_BinaryString(4)
-    LFX_Context_CreateProgram(context, vs, fs, _program)
+    _program = gl.CreateProgram(context, vs, fs)
 end
 
 local DemoDone = function(context, effect)
@@ -72,38 +73,27 @@ local DemoDone = function(context, effect)
     end
 
     if _program then
-        local p = string.unpack("i", _program)
-        glDeleteProgram(p)
+        gl.DeleteProgram(_program)
     end
 end
 
 local DemoRender = function(context, effect, input_texture, output_texture)
-    local p = string.unpack("i", _program)
     local vbo = string.unpack("i", _vbo)
     local ibo = string.unpack("i", _ibo)
 
     -- draw
-    glUseProgram(p)
-
-    local loc_mvp = glGetUniformLocation(p, "uMatrix")
-    glUniformMatrix4fv(loc_mvp, 1, GL_FALSE, LFX_MAT4_FLIP_Y)
-
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
-
-    local loc_pos = glGetAttribLocation(p, "aPosition")
-    glEnableVertexAttribArray(loc_pos)
-    glVertexAttribPointer(loc_pos, 2, GL_FLOAT, GL_FALSE, 4 * 6, 0)
-    local loc_color = glGetAttribLocation(p, "aColor")
-    glEnableVertexAttribArray(loc_color)
-    glVertexAttribPointer(loc_color, 4, GL_FLOAT, GL_FALSE, 4 * 6, 4 * 2)
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
+
+    gl.UseProgram(_program)
+    gl.UniformMatrix(_program, "uMatrix", LFX_MAT4_FLIP_Y)
+    gl.VertexAttrib(_program, "aPosition", 2, 4 * 6, 0)
+    gl.VertexAttrib(_program, "aColor", 4, 4 * 6, 4 * 2)
 
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, 0)
 
     -- restore
-    glDisableVertexAttribArray(loc_pos)
-    glDisableVertexAttribArray(loc_color)
+    gl.DisableVertexAttribs(_program)
 end
 
 return {
