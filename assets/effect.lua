@@ -36,7 +36,7 @@ local _effect = {
     end,
 
     Render = function(self, context, effect, input_texture, output_texture)
-        gl.AttachColor(output_texture)
+        gl.AttachColorTexture(output_texture)
         LFX_Context_RenderQuad(context, input_texture, LFX_MAT4_FLIP_Y)
 
         demo.Render(context, effect, input_texture, output_texture)

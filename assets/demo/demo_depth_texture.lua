@@ -74,22 +74,7 @@ local DemoInit = function(context, effect)
     _program = gl.CreateProgram(context, vs, fs)
 
     -- depth format
-    local major = LFX_BinaryString(4)
-    local minor = LFX_BinaryString(4)
-    local is_es = LFX_BinaryString(4)
-    LFX_Context_GetGLVersion(context, major, minor, is_es)
-    if string.unpack("i", major) >= 3 then
-        _depth_format = GL_DEPTH_COMPONENT24
-        LOGD("depth format: GL_DEPTH_COMPONENT24")
-    else
-        if LFX_Context_CheckGLExtension(context, "GL_OES_depth_texture") == LFX_SUCCESS then
-            _depth_format = GL_DEPTH_COMPONENT
-            LOGD("depth format: GL_DEPTH_COMPONENT")
-        else
-            _depth_format = 0
-            LOGE("not support depth texture")
-        end
-    end
+    _depth_format = gl.GetDepthTextureFormat(context)
 end
 
 local DemoDone = function(context, effect)

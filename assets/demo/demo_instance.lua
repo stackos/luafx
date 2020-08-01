@@ -10,8 +10,7 @@ local _rbo_size = {
 }
 local _rot = 0
 local _depth_format = GL_DEPTH_COMPONENT16
-local _support_instance = false
-local _support_instance_ext = false
+local _instance = nil
 local _vbo_instance = nil
 
 local DemoInit = function(context, effect)
@@ -89,49 +88,12 @@ local DemoInit = function(context, effect)
     _program = gl.CreateProgram(context, vs, fs)
 
     -- depth format
-    local major = LFX_BinaryString(4)
-    local minor = LFX_BinaryString(4)
-    local is_es = LFX_BinaryString(4)
-    LFX_Context_GetGLVersion(context, major, minor, is_es)
-    local gl_version = {
-        major = string.unpack("i", major),
-        minor = string.unpack("i", minor),
-        is_es = string.unpack("i", is_es),
-    }
-
-    if gl_version.major >= 3 then
-        _depth_format = GL_DEPTH_COMPONENT24
-        LOGD("depth format: GL_DEPTH_COMPONENT24")
-    else
-        if LFX_Context_CheckGLExtension(context, "GL_OES_depth24") == LFX_SUCCESS then
-            _depth_format = GL_DEPTH_COMPONENT24_OES
-            LOGD("depth format: GL_DEPTH_COMPONENT24_OES")
-        else
-            _depth_format = GL_DEPTH_COMPONENT16
-            LOGD("depth format: GL_DEPTH_COMPONENT16")
-        end
-    end
+    _depth_format = gl.GetDepthRenderbufferFormat(context)
 
     -- instance
-    if gl_version.is_es then
-        if gl_version.major >= 3 then
-            _support_instance = true
-            LOGD("support instance")
-        elseif gl_version.major == 2 then
-            if LFX_Context_CheckGLExtension(context, "GL_EXT_instanced_arrays") == LFX_SUCCESS and
-               LFX_Context_CheckGLExtension(context, "GL_EXT_draw_instanced") == LFX_SUCCESS then
-                _support_instance_ext = true
-                LOGD("support instance ext")
-            end
-        end
-    else
-        if (gl_version.major == 3 and gl_version.minor >= 3) or (gl_version.major > 3) then
-            _support_instance = true
-            LOGD("support instance")
-        end
-    end
+    _instance = gl.Instance(context)
 
-    if _support_instance or _support_instance_ext then
+    if _instance.is_support then
         local positions = { }
         for i = 1, 40 do
             for j = 1, 40 do
@@ -243,25 +205,15 @@ local DemoRender = function(context, effect, input_texture, output_texture)
     gl.VertexAttrib(_program, "aPosition", 3, 4 * 7, 0)
     gl.VertexAttrib(_program, "aColor", 4, 4 * 7, 4 * 3)
 
-    if _support_instance or _support_instance_ext then
+    if _instance.is_support then
         local vbo_instance = string.unpack("i", _vbo_instance)
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance)
 
         gl.VertexAttrib(_program, "aPositionInstance", 3, 0, 0)
 
-        local VertexAttribDivisor = nil
-        local DrawElementsInstanced = nil
-        if _support_instance then
-            VertexAttribDivisor = glVertexAttribDivisor
-            DrawElementsInstanced = glDrawElementsInstanced
-        elseif _support_instance_ext then
-            VertexAttribDivisor = glVertexAttribDivisorEXT
-            DrawElementsInstanced = glDrawElementsInstancedEXT
-        end
-
-        VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 1)
-        DrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0, 40 * 40)
-        VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 0)
+        _instance.VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 1)
+        _instance.DrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0, 40 * 40)
+        _instance.VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 0)
     end
 
     -- restore
