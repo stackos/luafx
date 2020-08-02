@@ -105,9 +105,23 @@
     lua_pushnumber(L, (lua_Number) r); \
     return 1; }
 
+#define DEF_FUNC_F_AF(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    float p2 = (float) luaL_checknumber(L, 2); \
+    float r = name(p1, p2); \
+    lua_pushnumber(L, (lua_Number) r); \
+    return 1; }
+
 #define DEF_FUNC_I_IS(name) static int lua_##name(lua_State* L) { \
     int p1 = (int) luaL_checkintegerstrict(L, 1); \
     const char* p2 = luaL_checkstringstrict(L, 2); \
+    int r = name(p1, p2); \
+    lua_pushinteger(L, (lua_Integer) r); \
+    return 1; }
+
+#define DEF_FUNC_I_AI(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    int p2 = (int) luaL_checkintegerstrict(L, 2); \
     int r = name(p1, p2); \
     lua_pushinteger(L, (lua_Integer) r); \
     return 1; }
@@ -172,6 +186,14 @@
     void* p1 = lua_touserdata_or_string(L, 1); \
     const char* p2 = luaL_checkstringstrict(L, 2); \
     void* p3 = lua_touserdata_or_string(L, 3); \
+    int r = name(p1, p2, p3); \
+    lua_pushinteger(L, (lua_Integer) r); \
+    return 1; }
+
+#define DEF_FUNC_I_AII(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    int p2 = (int) luaL_checkintegerstrict(L, 2); \
+    int p3 = (int) luaL_checkintegerstrict(L, 3); \
     int r = name(p1, p2, p3); \
     lua_pushinteger(L, (lua_Integer) r); \
     return 1; }
@@ -247,6 +269,14 @@
     void* p1 = lua_touserdata_or_string(L, 1); \
     void* p2 = lua_touserdata_or_string(L, 2); \
     float p3 = (float) luaL_checknumber(L, 3); \
+    void* p4 = lua_touserdata_or_string(L, 4); \
+    name(p1, p2, p3, p4); \
+    return 0; }
+
+#define DEF_FUNC_V_AIAA(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    int p2 = (int) luaL_checkintegerstrict(L, 2); \
+    void* p3 = lua_touserdata_or_string(L, 3); \
     void* p4 = lua_touserdata_or_string(L, 4); \
     name(p1, p2, p3, p4); \
     return 0; }
@@ -350,6 +380,17 @@
     name(p1, p2, p3, p4, p5, p6); \
     return 0; }
 
+#define DEF_FUNC_I_AIAAAA(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    int p2 = (int) luaL_checkintegerstrict(L, 2); \
+    void* p3 = lua_touserdata_or_string(L, 3); \
+    void* p4 = lua_touserdata_or_string(L, 4); \
+    void* p5 = lua_touserdata_or_string(L, 5); \
+    void* p6 = lua_touserdata_or_string(L, 6); \
+    int r = name(p1, p2, p3, p4, p5, p6); \
+    lua_pushinteger(L, (lua_Integer) r); \
+    return 1; }
+
 #define DEF_FUNC_V_IIIIIIA(name) static int lua_##name(lua_State* L) { \
     int p1 = (int) luaL_checkintegerstrict(L, 1); \
     int p2 = (int) luaL_checkintegerstrict(L, 2); \
@@ -418,6 +459,34 @@
     int p8 = (int) luaL_checkintegerstrict(L, 8); \
     void* p9 = lua_touserdata_or_string(L, 9); \
     name(p1, p2, p3, p4, p5, p6, p7, p8, p9); \
+    return 0; }
+
+#define DEF_FUNC_V_AIFFFFAAAA(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    int p2 = (int) luaL_checkintegerstrict(L, 2); \
+    float p3 = (float) luaL_checknumber(L, 3); \
+    float p4 = (float) luaL_checknumber(L, 4); \
+    float p5 = (float) luaL_checknumber(L, 5); \
+    float p6 = (float) luaL_checknumber(L, 6); \
+    void* p7 = lua_touserdata_or_string(L, 7); \
+    void* p8 = lua_touserdata_or_string(L, 8); \
+    void* p9 = lua_touserdata_or_string(L, 9); \
+    void* p10 = lua_touserdata_or_string(L, 10); \
+    name(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10); \
+    return 0; }
+
+#define DEF_FUNC_V_AAIIIFFFFI(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    void* p2 = lua_touserdata_or_string(L, 2); \
+    int p3 = (int) luaL_checkintegerstrict(L, 3); \
+    int p4 = (int) luaL_checkintegerstrict(L, 4); \
+    int p5 = (int) luaL_checkintegerstrict(L, 5); \
+    float p6 = (float) luaL_checknumber(L, 6); \
+    float p7 = (float) luaL_checknumber(L, 7); \
+    float p8 = (float) luaL_checknumber(L, 8); \
+    float p9 = (float) luaL_checknumber(L, 9); \
+    int p10 = (int) luaL_checkintegerstrict(L, 10); \
+    name(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10); \
     return 0; }
 
 #define REG_FUNC(name) { #name, lua_##name }

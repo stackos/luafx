@@ -9,6 +9,7 @@
 #include "lua_bind/lua_bind_cglm.h"
 #include "lua_bind/lua_bind_memory.h"
 #include "lua_bind/lua_bind_cjson.h"
+#include "lua_bind/lua_bind_stbtt.h"
 #include "cJSON.h"
 #include "Vector.h"
 
@@ -50,6 +51,7 @@ void LFX_Effect_Init(LFX_Effect* thiz, LFX_Context* context)
     LFX_LuaBindCGLM(L);
     LFX_LuaBindMemory(L);
     LFX_LuaBindCJSON(L);
+    LFX_LuaBindSTBTT(L);
 
     thiz->context = context;
     thiz->lua_state = L;
@@ -133,6 +135,13 @@ LFX_RESULT LFX_Effect_Load(LFX_Effect* thiz, const char* path)
 
     if (lua_ret != LUA_OK)
     {
+        size_t len = 0;
+        const char* err = lua_tolstring(L, -1, &len);
+        if (err && len > 0)
+        {
+            LFX_LOGE(err);
+        }
+        lua_pop(L, 1);
         RETURN_ERR(LFX_LUA_LOAD_ERROR);
     }
 
