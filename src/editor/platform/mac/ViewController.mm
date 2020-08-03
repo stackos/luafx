@@ -115,7 +115,7 @@
     sprintf(path, "%s/%s", res_dir, "assets/effect.lua");
     LFX_LoadEffect(m_context, path, &m_effect);
     
-    sprintf(path, "%s/%s", res_dir, "assets/input/1080x1920.jpg");
+    sprintf(path, "%s/%s", res_dir, "assets/input/2560x1600.jpg");
     LFX_LoadTexture2D(m_context, path, &m_texture_in);
     
     m_image_in = malloc(m_texture_in.width * m_texture_in.height * 4);

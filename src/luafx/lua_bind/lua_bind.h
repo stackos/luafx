@@ -27,14 +27,20 @@
     name(p1); \
     return 0; }
 
+#define DEF_FUNC_I_V(name) static int lua_##name(lua_State* L) { \
+    int r = name(); \
+    lua_pushinteger(L, (lua_Integer) r); \
+    return 1; }
+
 #define DEF_FUNC_I_I(name) static int lua_##name(lua_State* L) { \
     int p1 = (int) luaL_checkintegerstrict(L, 1); \
     int r = name(p1); \
     lua_pushinteger(L, (lua_Integer) r); \
     return 1; }
 
-#define DEF_FUNC_I_V(name) static int lua_##name(lua_State* L) { \
-    int r = name(); \
+#define DEF_FUNC_I_A(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    int r = name(p1); \
     lua_pushinteger(L, (lua_Integer) r); \
     return 1; }
 

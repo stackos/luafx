@@ -53,12 +53,29 @@ function Effect_Load(context, effect)
     _effect:Init(context, effect)
 
     -- test stb truetype font
+    local build_platform = LFX_BinaryString(4)
+    LFX_Context_GetBuildPlatform(context, build_platform)
+    local platform = string.unpack("i", build_platform)
+    local font_path = "c:/windows/fonts/arialbd.ttf"
+    if platform == LFX_BUILD_PLATFORM_MAC then
+        font_path = "/System/Library/Fonts/PingFang.ttc"
+    end
+    
     local pdata = LFX_PointerArrayCreate(1)
     local psize = LFX_BinaryString(4)
-    if LFX_Context_LoadFile(context, "c:/windows/fonts/arialbd.ttf", pdata, psize) == LFX_SUCCESS then
+    if LFX_Context_LoadFile(context, font_path, pdata, psize) == LFX_SUCCESS then
         LOGD("LFX_Context_LoadFile " .. string.unpack("i", psize))
         local data = LFX_PointerArrayGetElement(pdata, 0)
-        local font = stbtt_InitFont(data, 0)
+        
+        local font_count = stbtt_GetNumberOfFonts(data)
+        LOGD("stbtt_GetNumberOfFonts " .. font_count)
+        
+        local font = nil
+        if font_count > 0 then
+            local font_offset = stbtt_GetFontOffsetForIndex(data, 0)
+            font = stbtt_InitFont(data, font_offset)
+        end
+
         if font then
             LOGD("stbtt_InitFont")
 

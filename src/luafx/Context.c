@@ -738,7 +738,7 @@ LFX_RESULT LFX_Context_LoadFile(LFX_Context* thiz, const char* path, void** data
     LFX_RESULT ret = LFX_Context_GetFileSize(thiz, path_normalized, &file_size);
     if (ret != LFX_SUCCESS)
     {
-        RETURN_ERR(LFX_FILE_OPEN_FAIL);
+        return LFX_FILE_OPEN_FAIL;
     }
 
     FILE* file = fopen(path_normalized, "rb");

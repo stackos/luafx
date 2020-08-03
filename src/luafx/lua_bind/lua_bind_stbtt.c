@@ -25,6 +25,8 @@ static int lua_stbtt_InitFont(lua_State* L)
     return 1;
 }
 
+DEF_FUNC_I_A(stbtt_GetNumberOfFonts)
+DEF_FUNC_I_AI(stbtt_GetFontOffsetForIndex)
 DEF_FUNC_F_AF(stbtt_ScaleForPixelHeight)
 DEF_FUNC_V_AAAA(stbtt_GetFontVMetrics)
 DEF_FUNC_I_AI(stbtt_FindGlyphIndex)
@@ -36,6 +38,8 @@ DEF_FUNC_V_AIFFFFAAAA(stbtt_GetGlyphBitmapBoxSubpixel)
 DEF_FUNC_V_AAIIIFFFFI(stbtt_MakeGlyphBitmapSubpixel)
 
 static const luaL_Reg stbtt_funcs[] = {
+    REG_FUNC(stbtt_GetNumberOfFonts),
+    REG_FUNC(stbtt_GetFontOffsetForIndex),
     REG_FUNC(stbtt_InitFont),
     REG_FUNC(stbtt_ScaleForPixelHeight),
     REG_FUNC(stbtt_GetFontVMetrics),
