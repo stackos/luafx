@@ -138,7 +138,7 @@ static void InitEffectContext()
     sprintf(path, "%s/../../../%s", work_dir, "assets/effect.lua");
     LFX_LoadEffect(g_context, path, &g_effect);
 
-    sprintf(path, "%s/../../../%s", work_dir, "assets/input/2560x1600.jpg");
+    sprintf(path, "%s/../../../%s", work_dir, "assets/input/1280x720.jpg");
     LFX_LoadTexture2D(g_context, path, &g_texture_in);
 
     memset(&g_texture_out, 0, sizeof(g_texture_out));
