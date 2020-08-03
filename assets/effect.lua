@@ -1,3 +1,4 @@
+require("table_ext")
 local gl = require("gl")
 
 local demo = require("demo/demo_triangle")
