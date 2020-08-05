@@ -93,35 +93,17 @@ local DemoDone = function(context, effect)
     end
 
     if _depth_texture then
-        glDeleteTextures(1, _depth_texture.tex)
+        gl.DeleteTexture(_depth_texture)
     end
 end
 
 local function BindDepthBuffer(output_texture)
-    if _depth_texture == nil then
-        _depth_texture = {
-            id = 0,
-            target = GL_TEXTURE_2D,
-            format = _depth_format,
-            width = 0,
-            height = 0,
-            filter_mode = GL_NEAREST,
-            wrap_mode = GL_CLAMP_TO_EDGE,
-            tex = LFX_BinaryString(4)
-        }
-        glGenTextures(1, _depth_texture.tex)
-        _depth_texture.id = string.unpack("i", _depth_texture.tex)
-    end
-    if _depth_texture.width ~= output_texture.width or _depth_texture.height ~= output_texture.height then
-        _depth_texture.width = output_texture.width
-        _depth_texture.height = output_texture.height
-        glBindTexture(_depth_texture.target, _depth_texture.id)
-        glTexImage2D(_depth_texture.target, 0, _depth_texture.format, _depth_texture.width, _depth_texture.height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nil)
-        glTexParameteri(_depth_texture.target, GL_TEXTURE_MIN_FILTER, _depth_texture.filter_mode)
-        glTexParameteri(_depth_texture.target, GL_TEXTURE_MAG_FILTER, _depth_texture.filter_mode)
-        glTexParameteri(_depth_texture.target, GL_TEXTURE_WRAP_S, _depth_texture.wrap_mode)
-        glTexParameteri(_depth_texture.target, GL_TEXTURE_WRAP_T, _depth_texture.wrap_mode)
-        glBindTexture(_depth_texture.target, 0)
+    if _depth_texture == nil or _depth_texture.width ~= output_texture.width or _depth_texture.height ~= output_texture.height then
+        if _depth_texture then
+            gl.DeleteTexture(_depth_texture)
+            _depth_texture = nil
+        end
+        _depth_texture = gl.CreateTexture(GL_TEXTURE_2D, _depth_format, output_texture.width, output_texture.height, GL_NEAREST, GL_CLAMP_TO_EDGE)
     end
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, _depth_texture.target, _depth_texture.id, 0)
 

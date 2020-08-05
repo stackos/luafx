@@ -27,12 +27,12 @@ local _effect = {
 
         self.demo.Init(context, effect)
 
-        local font_path = "c:/windows/fonts/arialbd.ttf"
+        local font_path = "c:/windows/fonts/msyh.ttc"
         if platform == LFX_BUILD_PLATFORM_MAC then
             font_path = "/System/Library/Fonts/PingFang.ttc"
         end
         self.font = Font:New()
-        self.font:Init(context, font_path, 15)
+        self.font:Init(context, font_path, 20)
     end,
 
     Done = function(self, context, effect)
@@ -46,6 +46,18 @@ local _effect = {
         LFX_Context_RenderQuad(context, input_texture, LFX_MAT4_FLIP_Y)
 
         self.demo.Render(context, effect, input_texture, output_texture)
+
+        -- test draw text
+        local str = "Hello World! 你好世界！"
+        local codes = { }
+        for pos, code in utf8.codes(str) do
+            codes[#codes + 1] = code
+        end
+        for i = 1, #codes do
+            local code = codes[i]
+            local glyph = self.font:GetGlyph(code)
+        end
+        LFX_Context_RenderQuad(context, self.font:GetTexture(), LFX_MAT4_FLIP_Y)
     end,
 
     SetTimestamp = function(self, context, effect, message)

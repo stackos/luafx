@@ -8,17 +8,18 @@ return {
         end
 
         local program = {
+            id = 0,
             handle = handle,
             attributes = { },
             uniforms = { },
         }
-        local p = string.unpack("i", handle)
+        program.id = string.unpack("i", handle)
 
         -- attributes
         local int_handle = LFX_BinaryString(4)
-        glGetProgramiv(p, GL_ACTIVE_ATTRIBUTES, int_handle)
+        glGetProgramiv(program.id, GL_ACTIVE_ATTRIBUTES, int_handle)
         local attribute_count = string.unpack("i", int_handle)
-        glGetProgramiv(p, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, int_handle)
+        glGetProgramiv(program.id, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, int_handle)
         local attribute_name_size = string.unpack("i", int_handle)
         for i = 1, attribute_count do
             local name = LFX_BinaryString(attribute_name_size)
@@ -26,13 +27,13 @@ return {
             local size_handle = LFX_BinaryString(4)
             local type_handle = LFX_BinaryString(4)
 
-            glGetActiveAttrib(p, i - 1, attribute_name_size, length_handle, size_handle, type_handle, name)
+            glGetActiveAttrib(program.id, i - 1, attribute_name_size, length_handle, size_handle, type_handle, name)
 
             local length = string.unpack("i", length_handle)
             local size = string.unpack("i", size_handle)
             local type = string.unpack("i", type_handle)
             name = string.sub(name, 1, length)
-            local location = glGetAttribLocation(p, name)
+            local location = glGetAttribLocation(program.id, name)
 
             local attribute = {
                 name = name,
@@ -44,9 +45,9 @@ return {
         end
 
         -- uniforms
-        glGetProgramiv(p, GL_ACTIVE_UNIFORMS, int_handle)
+        glGetProgramiv(program.id, GL_ACTIVE_UNIFORMS, int_handle)
         local uniform_count = string.unpack("i", int_handle)
-        glGetProgramiv(p, GL_ACTIVE_UNIFORM_MAX_LENGTH, int_handle)
+        glGetProgramiv(program.id, GL_ACTIVE_UNIFORM_MAX_LENGTH, int_handle)
         local uniform_name_size = string.unpack("i", int_handle)
         for i = 1, uniform_count do
             local name = LFX_BinaryString(uniform_name_size)
@@ -54,13 +55,13 @@ return {
             local size_handle = LFX_BinaryString(4)
             local type_handle = LFX_BinaryString(4)
             
-            glGetActiveUniform(p, i - 1, uniform_name_size, length_handle, size_handle, type_handle, name)
+            glGetActiveUniform(program.id, i - 1, uniform_name_size, length_handle, size_handle, type_handle, name)
 
             local length = string.unpack("i", length_handle)
             local size = string.unpack("i", size_handle)
             local type = string.unpack("i", type_handle)
             name = string.sub(name, 1, length)
-            local location = glGetUniformLocation(p, name)
+            local location = glGetUniformLocation(program.id, name)
 
             local uniform = {
                 name = name,
@@ -75,13 +76,14 @@ return {
     end,
 
     DeleteProgram = function(program)
-        local p = string.unpack("i", program.handle)
-        glDeleteProgram(p)
+        if program.id > 0 then
+            glDeleteProgram(program.id)
+            program.id = 0
+        end
     end,
 
     UseProgram = function(program)
-        local p = string.unpack("i", program.handle)
-        glUseProgram(p)
+        glUseProgram(program.id)
     end,
 
     VertexAttrib = function(program, name, size, stride, offset)
@@ -124,7 +126,6 @@ return {
     end,
 
     UniformTexture = function(program, name, index, texture)
-        local p = string.unpack("i", program.handle)
         glUniform1i(program.uniforms[name].location, index)
         glActiveTexture(GL_TEXTURE0 + index)
         glBindTexture(texture.target, texture.id)
@@ -145,14 +146,14 @@ return {
         LFX_Context_GetGLVersion(context, major, minor, is_es)
         if string.unpack("i", major) >= 3 then
             depth_format = GL_DEPTH_COMPONENT24
-            LOGD("depth format: GL_DEPTH_COMPONENT24")
+            LOGI("gl.GetDepthRenderbufferFormat: GL_DEPTH_COMPONENT24")
         else
             if LFX_Context_CheckGLExtension(context, "GL_OES_depth24") == LFX_SUCCESS then
                 depth_format = GL_DEPTH_COMPONENT24_OES
-                LOGD("depth format: GL_DEPTH_COMPONENT24_OES")
+                LOGI("gl.GetDepthRenderbufferFormat: GL_DEPTH_COMPONENT24_OES")
             else
                 depth_format = GL_DEPTH_COMPONENT16
-                LOGD("depth format: GL_DEPTH_COMPONENT16")
+                LOGI("gl.GetDepthRenderbufferFormat: GL_DEPTH_COMPONENT16")
             end
         end
         return depth_format
@@ -166,14 +167,13 @@ return {
         LFX_Context_GetGLVersion(context, major, minor, is_es)
         if string.unpack("i", major) >= 3 then
             depth_format = GL_DEPTH_COMPONENT24
-            LOGD("depth format: GL_DEPTH_COMPONENT24")
+            LOGI("gl.GetDepthTextureFormat: GL_DEPTH_COMPONENT24")
         else
             if LFX_Context_CheckGLExtension(context, "GL_OES_depth_texture") == LFX_SUCCESS then
                 depth_format = GL_DEPTH_COMPONENT
-                LOGD("depth format: GL_DEPTH_COMPONENT")
+                LOGI("gl.GetDepthTextureFormat: GL_DEPTH_COMPONENT")
             else
-                depth_format = 0
-                LOGE("not support depth texture")
+                LOGE("gl.GetDepthTextureFormat: not support depth texture")
             end
         end
         return depth_format
@@ -200,18 +200,18 @@ return {
         if version.is_es then
             if version.major >= 3 then
                 instance.support_instance = true
-                LOGD("support instance")
+                LOGI("gl.Instance: support instance")
             elseif version.major == 2 then
                 if LFX_Context_CheckGLExtension(context, "GL_EXT_instanced_arrays") == LFX_SUCCESS and
                    LFX_Context_CheckGLExtension(context, "GL_EXT_draw_instanced") == LFX_SUCCESS then
                     instance.support_instance_ext = true
-                    LOGD("support instance ext")
+                    LOGI("gl.Instance: support instance ext")
                 end
             end
         else
             if (version.major == 3 and version.minor >= 3) or (version.major > 3) then
                 instance.support_instance = true
-                LOGD("support instance")
+                LOGI("gl.Instance: support instance")
             end
         end
         instance.is_support = instance.support_instance or instance.support_instance_ext
@@ -223,5 +223,64 @@ return {
             instance.DrawElementsInstanced = glDrawElementsInstancedEXT
         end
         return instance
+    end,
+
+    -- texture
+    CreateTexture = function(target, format, width, height, filter_mode, wrap_mode)
+        local texel_format = 0
+        local texel_type = 0
+        if format == GL_ALPHA then
+            texel_format = GL_ALPHA
+            texel_type = GL_UNSIGNED_BYTE
+        elseif format == GL_LUMINANCE then
+            texel_format = GL_LUMINANCE
+            texel_type = GL_UNSIGNED_BYTE
+        elseif format == GL_RGBA then
+            texel_format = GL_RGBA
+            texel_type = GL_UNSIGNED_BYTE
+        elseif format == GL_DEPTH_COMPONENT24 or format == GL_DEPTH_COMPONENT then
+            texel_format = GL_DEPTH_COMPONENT
+            texel_type = GL_UNSIGNED_INT
+        else
+            LOGE("gl.CreateTexture not support format: " .. format)
+            return nil
+        end
+        
+        local texture = {
+            id = 0,
+            target = target,
+            format = format,
+            width = width,
+            height = height,
+            filter_mode = filter_mode,
+            wrap_mode = wrap_mode,
+            tex = LFX_BinaryString(4),
+            texel_format = texel_format,
+            texel_type = texel_type,
+        }
+        glGenTextures(1, texture.tex)
+        texture.id = string.unpack("i", texture.tex)
+
+        glBindTexture(texture.target, texture.id)
+        glTexImage2D(texture.target, 0, texture.format, texture.width, texture.height, 0, texel_format, texel_type, nil)
+        glTexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, texture.filter_mode)
+        glTexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, texture.filter_mode)
+        glTexParameteri(texture.target, GL_TEXTURE_WRAP_S, texture.wrap_mode)
+        glTexParameteri(texture.target, GL_TEXTURE_WRAP_T, texture.wrap_mode)
+        glBindTexture(texture.target, 0)
+
+        return texture
+    end,
+
+    DeleteTexture = function(texture)
+        if texture.id > 0 then
+            glDeleteTextures(1, texture.tex)
+            texture.id = 0
+        end
+    end,
+
+    UpdateTexture = function(texture, x, y, w, h, data)
+        glBindTexture(texture.target, texture.id)
+        glTexSubImage2D(texture.target, 0, x, y, w, h, texture.texel_format, texture.texel_type, data)
     end,
 }

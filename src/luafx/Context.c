@@ -195,6 +195,7 @@ LFX_RESULT LFX_Context_Init(LFX_Context* thiz)
     LFX_Context_CreateCopyProgram(thiz);
 
     glFrontFace(GL_CW);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     
     if (thiz->gl_version[0] >= 3)
     {
