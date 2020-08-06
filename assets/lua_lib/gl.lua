@@ -1,4 +1,13 @@
+local GetError = function()
+    local err = glGetError()
+    if err ~= 0 then
+        LOGE("gl.GetError: " .. err .. "\n" .. debug.traceback())
+    end
+end
+
 return {
+    GetError = GetError,
+
     -- program
     CreateProgram = function(context, vs, fs)
         local handle = LFX_BinaryString(4)
@@ -72,6 +81,8 @@ return {
             program.uniforms[name] = uniform
         end
 
+        GetError()
+
         return program
     end,
 
@@ -80,10 +91,14 @@ return {
             glDeleteProgram(program.id)
             program.id = 0
         end
+
+        GetError()
     end,
 
     UseProgram = function(program)
         glUseProgram(program.id)
+
+        GetError()
     end,
 
     VertexAttrib = function(program, name, size, stride, offset)
@@ -93,12 +108,16 @@ return {
             glEnableVertexAttribArray(loc)
             glVertexAttribPointer(loc, size, GL_FLOAT, GL_FALSE, stride, offset)
         end
+
+        GetError()
     end,
 
     DisableVertexAttribs = function(program)
         for name, attribute in pairs(program.attributes) do
             glDisableVertexAttribArray(attribute.location)
         end
+
+        GetError()
     end,
 
     Uniform1f = function(program, name, f)
@@ -107,6 +126,8 @@ return {
 
     Uniform2f = function(program, name, x, y)
         glUniform2f(program.uniforms[name].location, x, y)
+
+        GetError()
     end,
 
     Uniform3f = function(program, name, x, y, z)
@@ -115,68 +136,102 @@ return {
 
     Uniform4f = function(program, name, x, y, z, w)
         glUniform4f(program.uniforms[name].location, x, y, z, w)
+
+        GetError()
     end,
 
     UniformMatrix = function(program, name, matrix)
         glUniformMatrix4fv(program.uniforms[name].location, 1, GL_FALSE, matrix)
+
+        GetError()
     end,
 
     Uniform1i = function(program, name, i)
         glUniform1i(program.uniforms[name].location, i)
+
+        GetError()
     end,
 
     UniformTexture = function(program, name, index, texture)
         glUniform1i(program.uniforms[name].location, index)
         glActiveTexture(GL_TEXTURE0 + index)
         glBindTexture(texture.target, texture.id)
+
+        GetError()
     end,
 
     -- framebuffer
     AttachColorTexture = function(texture)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texture.target, texture.id, 0)
         glViewport(0, 0, texture.width, texture.height)
+
+        GetError()
     end,
 
     -- depth format
     GetDepthRenderbufferFormat = function(context)
-        local depth_format = 0
+        local format = 0
         local major = LFX_BinaryString(4)
         local minor = LFX_BinaryString(4)
         local is_es = LFX_BinaryString(4)
         LFX_Context_GetGLVersion(context, major, minor, is_es)
         if string.unpack("i", major) >= 3 then
-            depth_format = GL_DEPTH_COMPONENT24
+            format = GL_DEPTH_COMPONENT24
             LOGI("gl.GetDepthRenderbufferFormat: GL_DEPTH_COMPONENT24")
         else
             if LFX_Context_CheckGLExtension(context, "GL_OES_depth24") == LFX_SUCCESS then
-                depth_format = GL_DEPTH_COMPONENT24_OES
+                format = GL_DEPTH_COMPONENT24_OES
                 LOGI("gl.GetDepthRenderbufferFormat: GL_DEPTH_COMPONENT24_OES")
             else
-                depth_format = GL_DEPTH_COMPONENT16
+                format = GL_DEPTH_COMPONENT16
                 LOGI("gl.GetDepthRenderbufferFormat: GL_DEPTH_COMPONENT16")
             end
         end
-        return depth_format
+
+        GetError()
+        
+        return format
     end,
 
     GetDepthTextureFormat = function(context)
-        local depth_format = 0
+        local format = 0
         local major = LFX_BinaryString(4)
         local minor = LFX_BinaryString(4)
         local is_es = LFX_BinaryString(4)
         LFX_Context_GetGLVersion(context, major, minor, is_es)
         if string.unpack("i", major) >= 3 then
-            depth_format = GL_DEPTH_COMPONENT24
+            format = GL_DEPTH_COMPONENT24
             LOGI("gl.GetDepthTextureFormat: GL_DEPTH_COMPONENT24")
         else
             if LFX_Context_CheckGLExtension(context, "GL_OES_depth_texture") == LFX_SUCCESS then
-                depth_format = GL_DEPTH_COMPONENT
+                format = GL_DEPTH_COMPONENT
                 LOGI("gl.GetDepthTextureFormat: GL_DEPTH_COMPONENT")
             else
                 LOGE("gl.GetDepthTextureFormat: not support depth texture")
             end
         end
-        return depth_format
+
+        GetError()
+
+        return format
+    end,
+
+    -- red format
+    GetRedTextureFormat = function(context)
+        local format = 0
+        local major = LFX_BinaryString(4)
+        local minor = LFX_BinaryString(4)
+        local is_es = LFX_BinaryString(4)
+        LFX_Context_GetGLVersion(context, major, minor, is_es)
+        if string.unpack("i", major) >= 3 then
+            format = GL_R8
+        else
+            format = GL_LUMINANCE
+        end
+
+        GetError()
+
+        return format
     end,
 
     -- instance
@@ -222,6 +277,9 @@ return {
             instance.VertexAttribDivisor = glVertexAttribDivisorEXT
             instance.DrawElementsInstanced = glDrawElementsInstancedEXT
         end
+
+        GetError()
+
         return instance
     end,
 
@@ -234,6 +292,9 @@ return {
             texel_type = GL_UNSIGNED_BYTE
         elseif format == GL_LUMINANCE then
             texel_format = GL_LUMINANCE
+            texel_type = GL_UNSIGNED_BYTE
+        elseif format == GL_R8 then
+            texel_format = GL_RED
             texel_type = GL_UNSIGNED_BYTE
         elseif format == GL_RGBA then
             texel_format = GL_RGBA
@@ -269,6 +330,8 @@ return {
         glTexParameteri(texture.target, GL_TEXTURE_WRAP_T, texture.wrap_mode)
         glBindTexture(texture.target, 0)
 
+        GetError()
+
         return texture
     end,
 
@@ -277,10 +340,14 @@ return {
             glDeleteTextures(1, texture.tex)
             texture.id = 0
         end
+
+        GetError()
     end,
 
     UpdateTexture = function(texture, x, y, w, h, data)
         glBindTexture(texture.target, texture.id)
         glTexSubImage2D(texture.target, 0, x, y, w, h, texture.texel_format, texture.texel_type, data)
+    
+        GetError()
     end,
 }

@@ -21,6 +21,7 @@ return {
         self.line_gap = 0
         self.glyph_map = { }
         self.texture = nil
+        self.texture_format = gl.GetRedTextureFormat(context)
         self.texture_size = { 1024, 1024 }
         self.texture_pos = { 0, 0 }
         self.texture_pos_y_max = 0
@@ -153,9 +154,9 @@ return {
     -- private
     FillTextureRect = function(self, bitmap, w, h)
         local rect = { 0, 0, 0, 0 }
-
+        
         if self.texture == nil then
-            self.texture = gl.CreateTexture(GL_TEXTURE_2D, GL_LUMINANCE, self.texture_size[1], self.texture_size[2], GL_NEAREST, GL_CLAMP_TO_EDGE)
+            self.texture = gl.CreateTexture(GL_TEXTURE_2D, self.texture_format, self.texture_size[1], self.texture_size[2], GL_NEAREST, GL_CLAMP_TO_EDGE)
         end
 
         if w > self.texture.width then

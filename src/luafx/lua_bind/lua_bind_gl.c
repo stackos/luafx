@@ -648,6 +648,8 @@ static const DefineReg gles3_defines[] = {
     REG_DEF(GL_MAP_INVALIDATE_BUFFER_BIT),
     REG_DEF(GL_MAP_FLUSH_EXPLICIT_BIT),
     REG_DEF(GL_MAP_UNSYNCHRONIZED_BIT),
+    REG_DEF(GL_R8),
+    REG_DEF(GL_RED),
 };
 
 void LFX_LuaBindGL(lua_State* L)
