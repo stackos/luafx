@@ -1,6 +1,7 @@
 require("table_ext")
 local gl = require("gl")
 local Font = require("Font")
+local Canvas = require("Canvas")
 
 local BuildPlatformNames = {
     "Windows",
@@ -27,18 +28,23 @@ local _effect = {
 
         self.demo.Init(context, effect)
 
+        -- test canvas
         local font_path = "c:/windows/fonts/msyh.ttc"
         if platform == LFX_BUILD_PLATFORM_MAC then
             font_path = "/System/Library/Fonts/PingFang.ttc"
         end
-        self.font = Font:New()
+        self.font = Font.New()
         self.font:Init(context, font_path, 20)
+        self.canvas = nil
     end,
 
     Done = function(self, context, effect)
         self.demo.Done(context, effect)
 
         self.font:Done()
+        if self.canvas then
+            self.canvas:Done()
+        end
     end,
 
     Render = function(self, context, effect, input_texture, output_texture)
@@ -47,17 +53,17 @@ local _effect = {
 
         self.demo.Render(context, effect, input_texture, output_texture)
 
-        -- test draw text
-        local str = "Hello World! 你好世界！"
-        local codes = { }
-        for pos, code in utf8.codes(str) do
-            codes[#codes + 1] = code
+        -- test canvas
+        if self.canvas == nil or self.canvas.width ~= output_texture.width or self.canvas.height ~= output_texture.height then
+            if self.canvas then
+                self.canvas:Done()
+                self.canvas = nil
+            end
+            self.canvas = Canvas.New()
+            self.canvas:Init(context, output_texture.width, output_texture.height)
         end
-        for i = 1, #codes do
-            local code = codes[i]
-            local glyph = self.font:GetGlyph(code)
-        end
-        LFX_Context_RenderQuad(context, self.font:GetTexture(), LFX_MAT4_FLIP_Y)
+
+        self.canvas:DrawText("Hello World! 你好世界！", self.font, 0, 20)
     end,
 
     SetTimestamp = function(self, context, effect, message)

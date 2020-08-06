@@ -1,111 +1,114 @@
 local gl = require("gl")
 
-return {
-    New = function(self)
-        local o = { }
-        setmetatable(o, self)
-        self.__index = self
-        return o
-    end,
+local QuadRenderer = { }
 
-    Init = function(self, context, effect)
-        -- vbo
-        local vertices = LFX_Float32ArrayCreateFromTable({
-            -1, 1,      0, 0,
-            -1, -1,     0, 1,
-            1, -1,      1, 1,
-            1, 1,       1, 0,
-        })
-        local indices = LFX_Uint16ArrayCreateFromTable({
-            0, 1, 2, 0, 2, 3
-        })
+function QuadRenderer.New()
+    local o = { }
+    setmetatable(o, QuadRenderer)
+    QuadRenderer.__index = QuadRenderer
+    return o
+end
 
-        self.vbo = LFX_BinaryString(4)
-        glGenBuffers(1, self.vbo)
-        local vbo = string.unpack("i", self.vbo)
+function QuadRenderer:Init(context)
+    self.context = context
+    self.vbo = nil
+    self.ibo = nil
+    self.program = nil
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBufferData(GL_ARRAY_BUFFER, 4 * 4 * 4, vertices, GL_STATIC_DRAW)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
+    -- vbo
+    local vertices = LFX_Float32ArrayCreateFromTable({
+        -1, 1,      0, 0,
+        -1, -1,     0, 1,
+        1, -1,      1, 1,
+        1, 1,       1, 0,
+    })
+    local indices = LFX_Uint16ArrayCreateFromTable({
+        0, 1, 2, 0, 2, 3
+    })
 
-        -- ibo
-        self.ibo = LFX_BinaryString(4)
-        glGenBuffers(1, self.ibo)
-        local ibo = string.unpack("i", self.ibo)
+    self.vbo = LFX_BinaryString(4)
+    glGenBuffers(1, self.vbo)
+    local vbo = string.unpack("i", self.vbo)
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 6, indices, GL_STATIC_DRAW)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+    glBindBuffer(GL_ARRAY_BUFFER, vbo)
+    glBufferData(GL_ARRAY_BUFFER, 4 * 4 * 4, vertices, GL_STATIC_DRAW)
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-        LFX_Free(vertices)
-        LFX_Free(indices)
+    -- ibo
+    self.ibo = LFX_BinaryString(4)
+    glGenBuffers(1, self.ibo)
+    local ibo = string.unpack("i", self.ibo)
 
-        -- program
-        local vs = [[
-            uniform mat4 uMatrix;
-            attribute vec2 aPosition;
-            attribute vec2 aTextureCoord;
-            varying vec2 vTextureCoord;
-            void main()
-            {
-                gl_Position = uMatrix * vec4(aPosition, 0.0, 1.0);
-                vTextureCoord = aTextureCoord;
-            }
-            ]]
-        local fs = [[
-            precision highp float;
-            uniform sampler2D uTexture0;
-            varying vec2 vTextureCoord;
-            void main()
-            {
-                gl_FragColor = texture2D(uTexture0, vTextureCoord);
-            }
-            ]]
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 6, indices, GL_STATIC_DRAW)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
-        self.program = gl.CreateProgram(context, vs, fs)
-    end,
+    LFX_Free(vertices)
+    LFX_Free(indices)
 
-    Done = function(self, context, effect)
-        if self.vbo then
-            glDeleteBuffers(1, self.vbo)
-        end
+    -- program
+    local vs = [[
+        uniform mat4 uMatrix;
+        attribute vec2 aPosition;
+        attribute vec2 aTextureCoord;
+        varying vec2 vTextureCoord;
+        void main()
+        {
+            gl_Position = uMatrix * vec4(aPosition, 0.0, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+        ]]
+    local fs = [[
+        precision highp float;
+        uniform sampler2D uTexture0;
+        varying vec2 vTextureCoord;
+        void main()
+        {
+            gl_FragColor = texture2D(uTexture0, vTextureCoord);
+        }
+        ]]
 
-        if self.ibo then
-            glDeleteBuffers(1, self.ibo)
-        end
+    self.program = gl.CreateProgram(self.context, vs, fs)
+end
 
-        if self.program then
-            gl.DeleteProgram(self.program)
-        end
-    end,
+function QuadRenderer:Done()
+    if self.vbo then
+        glDeleteBuffers(1, self.vbo)
+    end
 
-    Render = function(self, context, effect, texture, mvp, program)
-        if program == nil then
-            program = self.program
-        end
+    if self.ibo then
+        glDeleteBuffers(1, self.ibo)
+    end
 
-        local vbo = string.unpack("i", self.vbo)
-        local ibo = string.unpack("i", self.ibo)
+    if self.program then
+        gl.DeleteProgram(self.program)
+    end
+end
 
-        -- draw
-        gl.UseProgram(program)
-        gl.UniformMatrix(program, "uMatrix", mvp)
+function QuadRenderer:Render(texture, mvp, program)
+    if program == nil then
+        program = self.program
+    end
 
-        if texture then
-            gl.UniformTexture(program, "uTexture0", 0, texture)
-        end
+    local vbo = string.unpack("i", self.vbo)
+    local ibo = string.unpack("i", self.ibo)
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
-        gl.VertexAttrib(program, "aPosition", 2, 4 * 4, 0)
-        gl.VertexAttrib(program, "aTextureCoord", 2, 4 * 4, 4 * 2)
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0)
+    -- draw
+    gl.UseProgram(program)
+    gl.UniformMatrix(program, "uMatrix", mvp)
 
-        -- restore
-        gl.DisableVertexAttribs(program)
-    end,
+    if texture then
+        gl.UniformTexture(program, "uTexture0", 0, texture)
+    end
 
-    vbo = nil,
-    ibo = nil,
-    program = nil,
-}
+    glBindBuffer(GL_ARRAY_BUFFER, vbo)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
+    gl.VertexAttrib(program, "aPosition", 2, 4 * 4, 0)
+    gl.VertexAttrib(program, "aTextureCoord", 2, 4 * 4, 4 * 2)
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0)
+
+    -- restore
+    gl.DisableVertexAttribs(program)
+end
+
+return QuadRenderer
