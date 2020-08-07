@@ -36,6 +36,7 @@ local _effect = {
         self.font = Font.New()
         self.font:Init(context, font_path, 20)
         self.canvas = nil
+        self.label = nil
     end,
 
     Done = function(self, context, effect)
@@ -43,6 +44,9 @@ local _effect = {
 
         self.font:Done()
         if self.canvas then
+            if self.label then
+                self.canvas:DestroyText(self.label)
+            end
             self.canvas:Done()
         end
     end,
@@ -61,9 +65,9 @@ local _effect = {
             end
             self.canvas = Canvas.New()
             self.canvas:Init(context, output_texture.width, output_texture.height)
+            self.label = self.canvas:CreateText("Hello World!\n你好，世界！", self.font)
         end
-
-        self.canvas:DrawText("Hello World! 你好世界！", self.font, 0, 20)
+        self.canvas:DrawText(self.label, 0, 20, { 1, 1, 1, 1 })
     end,
 
     SetTimestamp = function(self, context, effect, message)

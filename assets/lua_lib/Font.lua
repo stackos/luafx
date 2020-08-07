@@ -18,7 +18,7 @@ function Font:Init(context, font_path, font_size)
     self.font = nil
     self.font_scale = 0
     self.ascent = 0
-    self.descend = 0
+    self.descent = 0
     self.line_gap = 0
     self.glyph_map = { }
     self.texture = nil
@@ -44,14 +44,14 @@ function Font:Init(context, font_path, font_size)
             self.font_scale = stbtt_ScaleForPixelHeight(self.font, font_size)
             LOGI("Font.Init get scale: " .. self.font_scale)
 
-            local pascend = LFX_BinaryString(4)
-            local pdescend = LFX_BinaryString(4)
+            local pascent = LFX_BinaryString(4)
+            local pdescent = LFX_BinaryString(4)
             local pline_gap = LFX_BinaryString(4)
-            stbtt_GetFontVMetrics(self.font, pascend, pdescend, pline_gap)
-            self.ascent = string.unpack("i", pascend)
-            self.descend = string.unpack("i", pdescend)
+            stbtt_GetFontVMetrics(self.font, pascent, pdescent, pline_gap)
+            self.ascent = string.unpack("i", pascent)
+            self.descent = string.unpack("i", pdescent)
             self.line_gap = string.unpack("i", pline_gap)
-            LOGI(string.format("Font.Init get font VMetrics, ascent: %d descend: %d line_gap: %d", self.ascent, self.descend, self.line_gap))
+            LOGI(string.format("Font.Init get font VMetrics, ascent: %d descent: %d line_gap: %d", self.ascent, self.descent, self.line_gap))
         else
             LOGE("Font.Init init font error")
         end
@@ -183,7 +183,7 @@ function Font:FillTextureRect(bitmap, w, h)
     self.texture_pos_y_max = math.max(self.texture_pos_y_max, y + h)
     self.texture_pos = { x + w + 1, y }
 
-    rect = { x / self.texture.width, y / self.texture.height, w / self.texture.width, h / self.texture.height }
+    rect = { x / self.texture.width, y / self.texture.height, (x + w) / self.texture.width, (y + h) / self.texture.height }
 
     return rect
 end
