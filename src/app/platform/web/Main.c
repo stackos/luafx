@@ -45,7 +45,7 @@ void EMSCRIPTEN_KEEPALIVE InitEngine(const char* msg)
 
     LFX_LoadEffect(g_context, "./assets/effect.lua", &g_effect);
 
-    LFX_LoadTexture2D(g_context, "./assets/input/2560x1600.jpg", &g_texture_in);
+    LFX_LoadTexture2D(g_context, "./assets/input/1280x720.jpg", &g_texture_in);
 
     memset(&g_texture_out, 0, sizeof(g_texture_out));
     g_texture_out.target = GL_TEXTURE_2D;

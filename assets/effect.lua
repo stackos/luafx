@@ -29,10 +29,7 @@ local _effect = {
         self.demo.Init(context, effect)
 
         -- test canvas
-        local font_path = "c:/windows/fonts/msyh.ttc"
-        if platform == LFX_BUILD_PLATFORM_MAC then
-            font_path = "/System/Library/Fonts/PingFang.ttc"
-        end
+        local font_path = LFX_Effect_GetEffectDir(effect) .. "/font/STXINWEI.TTF"
         self.font = Font.New()
         self.font:Init(context, font_path, 20)
         self.canvas = nil
