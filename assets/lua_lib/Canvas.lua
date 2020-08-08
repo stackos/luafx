@@ -50,6 +50,7 @@ end
 function Canvas:CreateText(str, font)
     local vertices = { }
     local indices = { }
+    local rect = nil
 
     local pen = { 0, 0 }
     local codes = { }
@@ -71,6 +72,15 @@ function Canvas:CreateText(str, font)
         local top = pen[2] + glyph.bitmap_box[2]
         local right = left + glyph.bitmap_box[3] - glyph.bitmap_box[1]
         local bottom = top + glyph.bitmap_box[4] - glyph.bitmap_box[2]
+
+        if rect == nil then
+            rect = { left, top, right, bottom }
+        else
+            rect[1] = math.min(rect[1], left)
+            rect[2] = math.min(rect[2], top)
+            rect[3] = math.max(rect[3], right)
+            rect[4] = math.max(rect[4], bottom)
+        end
 
         local vertex_count = math.floor(#vertices / 4)
         vertices[#vertices + 1] = left
@@ -132,11 +142,13 @@ function Canvas:CreateText(str, font)
         font = font,
         vertices = vertices,
         indices = indices,
+        rect = rect,
         pvbo = pvbo,
         pibo = pibo,
         vbo = vbo,
         ibo = ibo,
     }
+
     return text_mesh
 end
 
