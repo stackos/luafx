@@ -1,4 +1,5 @@
 local gl = require("gl")
+local QuadRenderer = require("QuadRenderer")
 
 local Canvas = { }
 
