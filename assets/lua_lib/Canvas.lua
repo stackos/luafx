@@ -15,36 +15,15 @@ function Canvas:Init(context, width, height)
     self.context = context
     self.width = width
     self.height = height
-
-    local vs = [[
-        uniform mat4 uMatrix;
-        attribute vec2 aPosition;
-        attribute vec2 aTextureCoord;
-        varying vec2 vTextureCoord;
-        void main()
-        {
-            gl_Position = uMatrix * vec4(aPosition, 0.0, 1.0);
-            vTextureCoord = aTextureCoord;
-        }
-        ]]
-    local fs = [[
-        precision highp float;
-        uniform sampler2D uTexture0;
-        uniform vec4 uColor;
-        varying vec2 vTextureCoord;
-        void main()
-        {
-            float a = texture2D(uTexture0, vTextureCoord).r;
-            gl_FragColor = vec4(uColor.rgb, uColor.a * a);
-        }
-        ]]
-
-    self.text_program = gl.CreateProgram(self.context, vs, fs)
+    self.text_program = self:CreateTextProgram()
+    self.quad_renderer = QuadRenderer.New()
+    self.quad_renderer:Init(self.context)
 end
 
 function Canvas:Done()
+    self.quad_renderer:Done()
     if self.text_program then
-        gl.DeleteProgram(self.text_program)
+        gl.DestroyProgram(self.text_program)
     end
 end
 
@@ -202,6 +181,88 @@ function Canvas:DrawText(text_mesh, x, y, color)
     gl.DisableVertexAttribs(program)
 
     glDisable(GL_BLEND)
+end
+
+function Canvas:DrawTexture(texture, x, y, w, h, sx, sy, sw, sh, deg, color)
+    if w == nil then
+        w = texture.width
+    end
+    if h == nil then
+        h = texture.height
+    end
+    if sx == nil then
+        sx = 0
+    end
+    if sy == nil then
+        sy = 0
+    end
+    if sw == nil then
+        sw = texture.width
+    end
+    if sh == nil then
+        sh = texture.height
+    end
+    if deg == nil then
+        deg = 0
+    end
+
+    -- mvp
+    local scale = mat4()
+    glm_scale_make(scale, vec3(0.5 * w, 0.5 * h, 1))
+    local rotate = mat4()
+    glm_euler_zxy(vec3(0, 0, glm_rad(deg)), rotate)
+    local translate = mat4()
+    glm_translate_make(translate, vec3(-self.width / 2 + x, self.height / 2 - y, 0))
+    local model = mat4()
+    glm_mat4_mul(rotate, scale, model)
+    glm_mat4_mul(translate, model, model)
+
+    local view = mat4()
+    glm_lookat_lh(vec3(0, 0, 0), vec3(0, 0, 1), vec3(0, 1, 0), view)
+    local proj = mat4()
+    glm_ortho_lh(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2, -1, 1, proj)
+    local vp = mat4()
+    glm_mat4_mul(proj, view, vp)
+    glm_mat4_mul(LFX_MAT4_FLIP_Y, vp, vp)
+    local mvp = mat4()
+    glm_mat4_mul(vp, model, mvp)
+
+    -- uv
+    local uv_scale_offset = { 1, 1, 0, 0 }
+    uv_scale_offset[1] = sw / texture.width
+    uv_scale_offset[2] = sh / texture.height
+    uv_scale_offset[3] = sx / texture.width
+    uv_scale_offset[4] = sy / texture.height
+
+    self.quad_renderer:Render(texture, mvp, nil, uv_scale_offset, color)
+end
+
+-- private
+function Canvas:CreateTextProgram()
+    local vs = [[
+        uniform mat4 uMatrix;
+        attribute vec2 aPosition;
+        attribute vec2 aTextureCoord;
+        varying vec2 vTextureCoord;
+        void main()
+        {
+            gl_Position = uMatrix * vec4(aPosition, 0.0, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+        ]]
+    local fs = [[
+        precision highp float;
+        uniform sampler2D uTexture0;
+        uniform vec4 uColor;
+        varying vec2 vTextureCoord;
+        void main()
+        {
+            float a = texture2D(uTexture0, vTextureCoord).r;
+            gl_FragColor = vec4(uColor.rgb, uColor.a * a);
+        }
+        ]]
+
+    return gl.CreateProgram(self.context, vs, fs)
 end
 
 return Canvas

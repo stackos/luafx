@@ -73,7 +73,7 @@ local DemoDone = function(context, effect)
     end
 
     if _program then
-        gl.DeleteProgram(_program)
+        gl.DestroyProgram(_program)
     end
 end
 

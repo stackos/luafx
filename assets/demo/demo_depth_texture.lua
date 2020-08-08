@@ -89,11 +89,11 @@ local DemoDone = function(context, effect)
     end
 
     if _program then
-        gl.DeleteProgram(_program)
+        gl.DestroyProgram(_program)
     end
 
     if _depth_texture then
-        gl.DeleteTexture(_depth_texture)
+        gl.DestroyTexture(context, _depth_texture)
     end
 end
 

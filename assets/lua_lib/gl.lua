@@ -1,7 +1,7 @@
 --[[
     gl.GetError()
     gl.CreateProgram(context, vs, fs)
-    gl.DeleteProgram(program)
+    gl.DestroyProgram(program)
     gl.UseProgram(program)
     gl.VertexAttrib(program, name, size, stride, offset)
     gl.DisableVertexAttribs(program)
@@ -18,7 +18,8 @@
     gl.GetRedTextureFormat(context)
     gl.Instance(context)
     gl.CreateTexture(target, format, width, height, filter_mode, wrap_mode)
-    gl.DeleteTexture(texture)
+    gl.LoadTexture(context, path, filter_mode, wrap_mode)
+    gl.DestroyTexture(context, texture)
     gl.UpdateTexture(texture, x, y, w, h, data)
 ]]
 
@@ -109,7 +110,7 @@ function gl.CreateProgram(context, vs, fs)
     return program
 end
 
-function gl.DeleteProgram(program)
+function gl.DestroyProgram(program)
     if program.id > 0 then
         glDeleteProgram(program.id)
         program.id = 0
@@ -358,9 +359,29 @@ function gl.CreateTexture(target, format, width, height, filter_mode, wrap_mode)
     return texture
 end
 
-function gl.DeleteTexture(texture)
+function gl.LoadTexture(context, path, filter_mode, wrap_mode)
+    local texture = {
+        id = 0,
+        target = 0,
+        format = 0,
+        width = 0,
+        height = 0,
+        filter_mode = filter_mode,
+        wrap_mode = wrap_mode,
+    }
+    local ret = LFX_Context_LoadTexture2D(context, path, texture)
+    if ret ~= LFX_SUCCESS then
+        return nil
+    end
+
+    gl.GetError()
+
+    return texture
+end
+
+function gl.DestroyTexture(context, texture)
     if texture.id > 0 then
-        glDeleteTextures(1, texture.tex)
+        LFX_Context_DestroyTexture(context, texture)
         texture.id = 0
     end
 

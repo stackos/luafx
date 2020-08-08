@@ -49,22 +49,24 @@ function QuadRenderer:Init(context)
     -- program
     local vs = [[
         uniform mat4 uMatrix;
+        uniform vec4 uTextureCoordScaleOffset;
         attribute vec2 aPosition;
         attribute vec2 aTextureCoord;
         varying vec2 vTextureCoord;
         void main()
         {
             gl_Position = uMatrix * vec4(aPosition, 0.0, 1.0);
-            vTextureCoord = aTextureCoord;
+            vTextureCoord = aTextureCoord * uTextureCoordScaleOffset.xy + uTextureCoordScaleOffset.zw;
         }
         ]]
     local fs = [[
         precision highp float;
         uniform sampler2D uTexture0;
+        uniform vec4 uColor;
         varying vec2 vTextureCoord;
         void main()
         {
-            gl_FragColor = texture2D(uTexture0, vTextureCoord);
+            gl_FragColor = texture2D(uTexture0, vTextureCoord) * uColor;
         }
         ]]
 
@@ -81,13 +83,19 @@ function QuadRenderer:Done()
     end
 
     if self.program then
-        gl.DeleteProgram(self.program)
+        gl.DestroyProgram(self.program)
     end
 end
 
-function QuadRenderer:Render(texture, mvp, program)
+function QuadRenderer:Render(texture, mvp, program, uv_scale_offset, color)
     if program == nil then
         program = self.program
+    end
+    if uv_scale_offset == nil then
+        uv_scale_offset = { 1, 1, 0, 0 }
+    end
+    if color == nil then
+        color = { 1, 1, 1, 1 }
     end
 
     local vbo = string.unpack("i", self.vbo)
@@ -96,7 +104,9 @@ function QuadRenderer:Render(texture, mvp, program)
     -- draw
     gl.UseProgram(program)
     gl.UniformMatrix(program, "uMatrix", mvp)
-
+    gl.Uniform4f(program, "uTextureCoordScaleOffset", uv_scale_offset[1], uv_scale_offset[2], uv_scale_offset[3], uv_scale_offset[4])
+    gl.Uniform4f(program, "uColor", color[1], color[2], color[3], color[4])
+    
     if texture then
         gl.UniformTexture(program, "uTexture0", 0, texture)
     end

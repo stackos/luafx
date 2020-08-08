@@ -63,7 +63,7 @@ end
 
 function Font:Done()
     if self.texture then
-        gl.DeleteTexture(self.texture)
+        gl.DestroyTexture(self.context, self.texture)
     end
     if self.font then
         LFX_Free(self.font)
