@@ -115,7 +115,7 @@
     sprintf(path, "%s/%s", res_dir, "assets/effect.lua");
     LFX_LoadEffect(m_context, path, &m_effect);
     
-    sprintf(path, "%s/%s", res_dir, "assets/input/2560x1600.jpg");
+    sprintf(path, "%s/%s", res_dir, "assets/input/1280x720.jpg");
     LFX_LoadTexture2D(m_context, path, &m_texture_in);
     
     m_image_in = malloc(m_texture_in.width * m_texture_in.height * 4);
@@ -172,12 +172,9 @@
     w = (int) (w * scale);
     h = (int) (h * scale);
     
-    m_target_width = w;
-    m_target_height = h;
-    
     float window_scale = _window.backingScaleFactor;
-    w /= window_scale;
-    h /= window_scale;
+    m_target_width = (int) (w * window_scale);
+    m_target_height = (int) (h * window_scale);
     
     NSRect rect = NSMakeRect(0, 0, w, h);
     NSRect frame = [_window frameRectForContentRect:rect];
