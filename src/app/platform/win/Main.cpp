@@ -261,7 +261,7 @@ int WINAPI WinMain(
     freopen_s(&stream_in, "CON", "r", stdin);
     freopen_s(&stream_out, "CON", "w", stdout);
 
-    const char* name = "luafx_editor";
+    const char* name = "luafx_app";
     int window_width = 1280;
     int window_height = 720;
 
@@ -360,7 +360,7 @@ int WINAPI WinMain(
                     g_fps_update_time = t;
 
                     char title[1024];
-                    sprintf(title, "luafx_editor [w: %d h: %d] [fps: %d] ", g_texture_in.width, g_texture_in.height, fps);
+                    sprintf(title, "luafx_app [w: %d h: %d] [fps: %d] ", g_texture_in.width, g_texture_in.height, fps);
                     SetWindowText(hwnd, title);
                 }
                 g_frame_count += 1;

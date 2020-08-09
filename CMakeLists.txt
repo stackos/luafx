@@ -27,10 +27,6 @@ get_filename_component(LFX_LIB_SRC_DIR
                        ${CMAKE_SOURCE_DIR}/src/luafx
                        ABSOLUTE)
 
-get_filename_component(LFX_EDITOR_SRC_DIR
-                       ${CMAKE_SOURCE_DIR}/src/editor
-                       ABSOLUTE)
-
 get_filename_component(LFX_APP_SRC_DIR
                        ${CMAKE_SOURCE_DIR}/src/app
                        ABSOLUTE)
@@ -44,10 +40,10 @@ file(GLOB LFX_LIB_SRCS
      ${LFX_LIB_SRC_DIR}/lua_bind/*.c
      )
 
-# editor
-file(GLOB LFX_EDITOR_SRCS
-     ${LFX_EDITOR_SRC_DIR}/*.h
-     ${LFX_EDITOR_SRC_DIR}/*.c
+# app
+file(GLOB LFX_APP_SRCS
+     ${LFX_APP_SRC_DIR}/*.h
+     ${LFX_APP_SRC_DIR}/*.c
      )
 
 # glew
@@ -156,7 +152,7 @@ endif ()
 
 if (${CMAKE_VERSION} VERSION_GREATER "3.8.0" )
     source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${LFX_LIB_SRCS})
-    source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${LFX_EDITOR_SRCS})
+    source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${LFX_APP_SRCS})
 endif ()
 
 target_include_directories(${LFX_TARGET} PRIVATE
@@ -177,38 +173,37 @@ if (${Target} MATCHES "Windows")
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
     set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMakeTargets")
 
-    source_group(src FILES ${LFX_EDITOR_SRC_DIR}/platform/win/Main.cpp)
+    source_group(src FILES ${LFX_APP_SRC_DIR}/platform/win/Main.cpp)
 
-    add_executable(luafx_editor
-                   ${LFX_EDITOR_SRCS}
-                   ${LFX_EDITOR_SRC_DIR}/platform/win/Main.cpp
-                   ${LFX_EDITOR_WEBCAMERA_SRCS}
+    add_executable(luafx_app
+                   ${LFX_APP_SRCS}
+                   ${LFX_APP_SRC_DIR}/platform/win/Main.cpp
                    )
 
-    target_include_directories(luafx_editor PRIVATE
-                               ${LFX_EDITOR_SRC_DIR}
+    target_include_directories(luafx_app PRIVATE
+                               ${LFX_APP_SRC_DIR}
                                ${CMAKE_SOURCE_DIR}/include
                                ${LFX_LIB_SRC_DIR}
                                ${CMAKE_SOURCE_DIR}/3rd/glew/include
                                )
 
-    target_link_libraries(luafx_editor
+    target_link_libraries(luafx_app
                           glew32
                           ${LFX_TARGET}
                           winmm.lib
                           )
 
-    set_property(TARGET luafx_editor PROPERTY LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+    set_property(TARGET luafx_app PROPERTY LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 
     string(REPLACE "/" "\\" BIN_DIR ${PROJECT_BINARY_DIR}/$(Configuration))
     string(REPLACE "/" "\\" ASSETS_DIR ${CMAKE_SOURCE_DIR}/assets)
 
-    add_custom_command(TARGET luafx_editor
+    add_custom_command(TARGET luafx_app
                        POST_BUILD
                        COMMAND xcopy ${ASSETS_DIR} ${BIN_DIR}\\assets\\ /s /d /y
                        )
 
-    set_property(TARGET luafx_editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${BIN_DIR}")
+    set_property(TARGET luafx_app PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${BIN_DIR}")
 
 elseif (${Target} MATCHES "Mac")
 
@@ -216,37 +211,37 @@ elseif (${Target} MATCHES "Mac")
     add_compile_options(-fobjc-arc -Wall)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     
-    set_source_files_properties(${LFX_EDITOR_SRC_DIR}/platform/mac/Assets.xcassets
+    set_source_files_properties(${LFX_APP_SRC_DIR}/platform/mac/Assets.xcassets
                                 ${CMAKE_SOURCE_DIR}/assets
                                 PROPERTIES
                                 MACOSX_PACKAGE_LOCATION Resources
                                 )
 
-    add_executable(luafx_editor
-                   ${LFX_EDITOR_SRCS}
-                   ${LFX_EDITOR_SRC_DIR}/platform/mac/Main.m
-                   ${LFX_EDITOR_SRC_DIR}/platform/mac/AppDelegate.m
-                   ${LFX_EDITOR_SRC_DIR}/platform/mac/ViewController.mm
-                   ${LFX_EDITOR_SRC_DIR}/platform/mac/Assets.xcassets
+    add_executable(luafx_app
+                   ${LFX_APP_SRCS}
+                   ${LFX_APP_SRC_DIR}/platform/mac/Main.m
+                   ${LFX_APP_SRC_DIR}/platform/mac/AppDelegate.m
+                   ${LFX_APP_SRC_DIR}/platform/mac/ViewController.mm
+                   ${LFX_APP_SRC_DIR}/platform/mac/Assets.xcassets
                    ${CMAKE_SOURCE_DIR}/assets
                    )
 
-    target_include_directories(luafx_editor PRIVATE
-                               ${LFX_EDITOR_SRC_DIR}
+    target_include_directories(luafx_app PRIVATE
+                               ${LFX_APP_SRC_DIR}
                                ${CMAKE_SOURCE_DIR}/include
                                ${LFX_LIB_SRC_DIR}
                                ${CMAKE_SOURCE_DIR}/3rd/glew/include
                                )
 
-    target_link_libraries(luafx_editor
+    target_link_libraries(luafx_app
                           glew32
                           ${LFX_TARGET}
                           "-framework AppKit"
                           )
 
-    set_target_properties(luafx_editor PROPERTIES
+    set_target_properties(luafx_app PROPERTIES
                           MACOSX_BUNDLE TRUE
-                          MACOSX_BUNDLE_INFO_PLIST ${LFX_EDITOR_SRC_DIR}/platform/mac/Info.plist
+                          MACOSX_BUNDLE_INFO_PLIST ${LFX_APP_SRC_DIR}/platform/mac/Info.plist
                           XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
                           )
 
@@ -266,7 +261,7 @@ elseif (${Target} MATCHES "iOS")
                                 MACOSX_PACKAGE_LOCATION Resources
                                 )
 
-    add_executable(luafx_camera
+    add_executable(luafx_app
                    ${LFX_APP_SRC_DIR}/platform/ios/Main.m
                    ${LFX_APP_SRC_DIR}/platform/ios/AppDelegate.m
                    ${LFX_APP_SRC_DIR}/platform/ios/ViewController.mm
@@ -275,29 +270,29 @@ elseif (${Target} MATCHES "iOS")
                    ${CMAKE_SOURCE_DIR}/assets
                    )
 
-    target_include_directories(luafx_camera PRIVATE
+    target_include_directories(luafx_app PRIVATE
                                ${CMAKE_SOURCE_DIR}/include
                                ${LFX_LIB_SRC_DIR}
                                )
 
-    target_link_libraries(luafx_camera
+    target_link_libraries(luafx_app
                           ${LFX_TARGET}
                           "-framework UIKit"
                           "-framework QuartzCore"
                           )
 
-    set_target_properties(luafx_camera PROPERTIES
+    set_target_properties(luafx_app PROPERTIES
                           MACOSX_BUNDLE TRUE
                           XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
-                          MACOSX_BUNDLE_INFO_PLIST ${LFX_APP_SRC_DIR}/platform/ios/luafx_camera-Info.plist
+                          MACOSX_BUNDLE_INFO_PLIST ${LFX_APP_SRC_DIR}/platform/ios/luafx_app-Info.plist
                           XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
                           XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
                           )
                           
-    add_custom_command(TARGET luafx_camera POST_BUILD
+    add_custom_command(TARGET luafx_app POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_directory
                            $(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/luafx.framework
-                           $(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/luafx_camera.app/Frameworks/luafx.framework
+                           $(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/luafx_app.app/Frameworks/luafx.framework
                        )
 
 elseif (${Target} MATCHES "Android")
@@ -325,11 +320,11 @@ elseif (${Target} MATCHES "WASM")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLFX_WASM -Wall")
     add_definitions(-s WASM=1 -O3)
 
-    add_library(luafx_wasm STATIC
+    add_library(luafx_app STATIC
                 ${CMAKE_SOURCE_DIR}/src/app/platform/web/Main.c
                 )
 
-    target_include_directories(luafx_wasm PRIVATE
+    target_include_directories(luafx_app PRIVATE
                                ${CMAKE_SOURCE_DIR}/include
                                ${LFX_LIB_SRC_DIR}
                                ${CMAKE_SOURCE_DIR}/3rd/cjson

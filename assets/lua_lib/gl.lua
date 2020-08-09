@@ -391,7 +391,8 @@ end
 function gl.UpdateTexture(texture, x, y, w, h, data)
     glBindTexture(texture.target, texture.id)
     glTexSubImage2D(texture.target, 0, x, y, w, h, texture.texel_format, texture.texel_type, data)
-    
+    glBindTexture(texture.target, 0)
+
     gl.GetError()
 end
 
