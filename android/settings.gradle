@@ -1,2 +1,2 @@
 include ':app', ':luafx'
-rootProject.name='luafx_camera'
+rootProject.name='luafx_app'
