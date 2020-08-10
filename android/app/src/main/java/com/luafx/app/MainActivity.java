@@ -12,8 +12,7 @@ import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.luafx.app.utils.CameraUtil;
-import com.luafx.app.utils.CameraView;
+import com.luafx.app.utils.GLView;
 import com.luafx.app.utils.GLTexture;
 import com.luafx.lib.LuaFX;
 
@@ -26,7 +25,7 @@ public class MainActivity extends Activity {
     private static final int PERMISSION_REQUEST_STORAGE = 1;
 
     private RelativeLayout mLayout;
-    private CameraView mCameraView;
+    private GLView mGLView;
     private AlertDialog mDialog;
     private int mFrameCount = 0;
     private long mFrameTime = 0;
@@ -80,15 +79,15 @@ public class MainActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        if (mCameraView != null) {
-            mCameraView.onResume();
+        if (mGLView != null) {
+            mGLView.onResume();
         }
     }
 
     @Override
     public void onPause() {
-        if (mCameraView != null) {
-            mCameraView.onPause();
+        if (mGLView != null) {
+            mGLView.onPause();
         }
         super.onPause();
     }
@@ -105,41 +104,24 @@ public class MainActivity extends Activity {
     }
 
     private void setCameraView() {
-        extractAssetsDirs(new String[] { "assets", "assets/demo", "assets/input", "assets/lua_lib" });
+        extractAssetsDirs(new String[] { "assets", "assets/demo", "assets/input", "assets/lua_lib", "assets/font" });
 
         mLayout = new RelativeLayout(this);
-        mCameraView = new CameraView(this);
+        mGLView = new GLView(this);
 
         // for render
-        mCameraView.setDrawFrameCallback(720, 1280, new CameraView.DrawFrameCallback() {
+        mGLView.setDrawFrameCallback(new GLView.DrawFrameCallback() {
             @Override
-            public void onDrawFrame(GLTexture textureIn, GLTexture textureOut, CameraUtil.ReadedImage image) {
-                if (image.data == null) {
-                    mCameraView.copyTexture(textureIn, textureOut);
-                    return;
-                }
+            public void onDrawFrame(GLTexture textureOut) {
+                mTextureOut.id = textureOut.getTextureId();
+                mTextureOut.target = textureOut.getTarget();
+                mTextureOut.format = textureOut.getFormat();
+                mTextureOut.width = textureOut.getWidth();
+                mTextureOut.height = textureOut.getHeight();
+                mTextureOut.filterMode = GLES20.GL_LINEAR;
+                mTextureOut.wrapMode = GLES20.GL_CLAMP_TO_EDGE;
 
-                if (mEffect != LuaFX.LFX_INVALID_HANDLE) {
-                    mTextureIn.id = textureIn.getTextureId();
-                    mTextureIn.target = textureIn.getTarget();
-                    mTextureIn.format = textureIn.getFormat();
-                    mTextureIn.width = textureIn.getWidth();
-                    mTextureIn.height = textureIn.getHeight();
-                    mTextureIn.filterMode = GLES20.GL_LINEAR;
-                    mTextureIn.wrapMode = GLES20.GL_CLAMP_TO_EDGE;
-
-                    mTextureOut.id = textureOut.getTextureId();
-                    mTextureOut.target = textureOut.getTarget();
-                    mTextureOut.format = textureOut.getFormat();
-                    mTextureOut.width = textureOut.getWidth();
-                    mTextureOut.height = textureOut.getHeight();
-                    mTextureOut.filterMode = GLES20.GL_LINEAR;
-                    mTextureOut.wrapMode = GLES20.GL_CLAMP_TO_EDGE;
-
-                    LuaFX.renderEffect(mContext, mEffect, mTextureIn, mTextureOut, null);
-                } else {
-                    mCameraView.copyTexture(textureIn, textureOut);
-                }
+                LuaFX.renderEffect(mContext, mEffect, mTextureIn, mTextureOut, null);
 
                 mFrameCount++;
                 long now = System.currentTimeMillis();
@@ -173,6 +155,9 @@ public class MainActivity extends Activity {
                 }
 
                 mEffect = arr[0];
+
+                String imagePath = getFilesDir().getPath() + "/assets/input/720x1280.png";
+                LuaFX.loadTexture2D(mContext, imagePath, mTextureIn);
             }
 
             @Override
@@ -197,7 +182,7 @@ public class MainActivity extends Activity {
         });
 
         mLayout.addView(
-                mCameraView,
+                mGLView,
                 new RelativeLayout.LayoutParams(
                     RelativeLayout.LayoutParams.MATCH_PARENT,
                     RelativeLayout.LayoutParams.MATCH_PARENT
