@@ -42,15 +42,21 @@ local DemoRender = function(context, effect, input_texture, output_texture)
         _canvas:Init(context, output_texture.width, output_texture.height)
         _label = _canvas:CreateText("Hello World!\n你好，世界！", _font)
     end
-    _canvas:DrawText(_label, 0, 20, { 1, 1, 1, 1 })
 
-    _canvas:DrawTexture(_texture,
-        640, 360,
-        360, 640,
-        270, 100,
-        540, 960,
-        45,
-        { 1, 1, 0, 1 })
+    _canvas:DrawBegin()
+    _canvas:DrawText(_label, 0, 20, { 1, 1, 1, 1 })
+    for i = 1, 10 do
+        for j = 1, 5 do
+            _canvas:DrawTexture(_texture,
+                100 + 120 * (i - 1), 100 + 120 * (j - 1),
+                100, 100,
+                (i - 1) * 100, 300 + (j - 1) * 100,
+                100, 100,
+                0,
+                { 1, (j - 1) / 5, (i - 1) / 10, 1 })
+        end
+    end
+    _canvas:DrawEnd()
 end
 
 return {

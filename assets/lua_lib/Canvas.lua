@@ -18,6 +18,13 @@ function Canvas:Init(context, width, height)
     self.text_program = self:CreateTextProgram()
     self.quad_renderer = QuadRenderer.New()
     self.quad_renderer:Init(self.context)
+    self.instance = gl.Instance(self.context)
+    self.draw_call = 0
+    self.draw_texture_cmds = { }
+    self.draw_texture_batches = { }
+    self.draw_vp = nil
+
+    self:SetSize(width, height)
 end
 
 function Canvas:Done()
@@ -25,6 +32,21 @@ function Canvas:Done()
     if self.text_program then
         gl.DestroyProgram(self.text_program)
     end
+end
+
+function Canvas:SetSize(width, height)
+    self.width = width
+    self.height = height
+
+    local view = mat4()
+    glm_lookat_lh(vec3(0, 0, 0), vec3(0, 0, 1), vec3(0, 1, 0), view)
+    local proj = mat4()
+    glm_ortho_lh(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2, -1, 1, proj)
+    local vp = mat4()
+    glm_mat4_mul(proj, view, vp)
+    glm_mat4_mul(LFX_MAT4_FLIP_Y, vp, vp)
+
+    self.draw_vp = vp
 end
 
 function Canvas:CreateText(str, font)
@@ -141,6 +163,11 @@ function Canvas:DestroyText(text_mesh)
     end
 end
 
+function Canvas:DrawBegin()
+    self.draw_call = 0
+    self.draw_texture_cmds = { }
+end
+
 function Canvas:DrawText(text_mesh, x, y, color)
     local font = text_mesh.font
     local index_count = #text_mesh.indices
@@ -155,15 +182,8 @@ function Canvas:DrawText(text_mesh, x, y, color)
     -- mvp
     local model = mat4()
     glm_translate_make(model, vec3(-self.width / 2 + x, self.height / 2 - y, 0))
-    local view = mat4()
-    glm_lookat_lh(vec3(0, 0, 0), vec3(0, 0, 1), vec3(0, 1, 0), view)
-    local proj = mat4()
-    glm_ortho_lh(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2, -1, 1, proj)
-    local vp = mat4()
-    glm_mat4_mul(proj, view, vp)
-    glm_mat4_mul(LFX_MAT4_FLIP_Y, vp, vp)
     local mvp = mat4()
-    glm_mat4_mul(vp, model, mvp)
+    glm_mat4_mul(self.draw_vp, model, mvp)
 
     -- draw
     gl.UseProgram(program)
@@ -181,9 +201,15 @@ function Canvas:DrawText(text_mesh, x, y, color)
     gl.DisableVertexAttribs(program)
 
     glDisable(GL_BLEND)
+
+    self.draw_call = self.draw_call + 1
 end
 
 function Canvas:DrawTexture(texture, x, y, w, h, sx, sy, sw, sh, deg, color)
+    if texture == nil or x == nil or y == nil then
+        return
+    end
+
     if w == nil then
         w = texture.width
     end
@@ -205,36 +231,50 @@ function Canvas:DrawTexture(texture, x, y, w, h, sx, sy, sw, sh, deg, color)
     if deg == nil then
         deg = 0
     end
+    if color == nil then
+        color = { 1, 1, 1, 1 }
+    end
 
-    -- mvp
-    local scale = mat4()
-    glm_scale_make(scale, vec3(0.5 * w, 0.5 * h, 1))
-    local rotate = mat4()
-    glm_euler_zxy(vec3(0, 0, glm_rad(deg)), rotate)
-    local translate = mat4()
-    glm_translate_make(translate, vec3(-self.width / 2 + x, self.height / 2 - y, 0))
-    local model = mat4()
-    glm_mat4_mul(rotate, scale, model)
-    glm_mat4_mul(translate, model, model)
+    local cmd = {
+        texture = texture,
+        x = x,
+        y = y,
+        w = w,
+        h = h,
+        sx = sx,
+        sy = sy,
+        sw = sw,
+        sh = sh,
+        deg = deg,
+        color = color,
+    }
 
-    local view = mat4()
-    glm_lookat_lh(vec3(0, 0, 0), vec3(0, 0, 1), vec3(0, 1, 0), view)
-    local proj = mat4()
-    glm_ortho_lh(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2, -1, 1, proj)
-    local vp = mat4()
-    glm_mat4_mul(proj, view, vp)
-    glm_mat4_mul(LFX_MAT4_FLIP_Y, vp, vp)
-    local mvp = mat4()
-    glm_mat4_mul(vp, model, mvp)
+    if self.instance.is_support then
+        self.draw_texture_cmds[#self.draw_texture_cmds + 1] = cmd
+    else
+        self:DrawTextureSingle(cmd)
+    end
+end
 
-    -- uv
-    local uv_scale_offset = { 1, 1, 0, 0 }
-    uv_scale_offset[1] = sw / texture.width
-    uv_scale_offset[2] = sh / texture.height
-    uv_scale_offset[3] = sx / texture.width
-    uv_scale_offset[4] = sy / texture.height
+function Canvas:DrawEnd()
+    if #self.draw_texture_cmds > 0 then
+        self.draw_texture_batches = { }
+        local batch = { }
+        for i = 1, #self.draw_texture_cmds do
+            local cmd = self.draw_texture_cmds[i]
+            if #batch == 0 or batch[#batch].texture == cmd.texture then
+                batch[#batch + 1] = cmd
+            else
+                self.draw_texture_batches[#self.draw_texture_batches + 1] = batch
+                batch = { cmd }
+            end
+        end
+        self.draw_texture_batches[#self.draw_texture_batches + 1] = batch
 
-    self.quad_renderer:Render(texture, mvp, nil, uv_scale_offset, color)
+        for i = 1, #self.draw_texture_batches do
+            self:DrawTextureBatch(self.draw_texture_batches[i])
+        end
+    end
 end
 
 -- private
@@ -263,6 +303,42 @@ function Canvas:CreateTextProgram()
         ]]
 
     return gl.CreateProgram(self.context, vs, fs)
+end
+
+function Canvas:GetTextureMVP(cmd)
+    local scale = mat4()
+    glm_scale_make(scale, vec3(0.5 * cmd.w, 0.5 * cmd.h, 1))
+    local rotate = mat4()
+    glm_euler_zxy(vec3(0, 0, glm_rad(cmd.deg)), rotate)
+    local translate = mat4()
+    glm_translate_make(translate, vec3(-self.width / 2 + cmd.x, self.height / 2 - cmd.y, 0))
+    local model = mat4()
+    glm_mat4_mul(rotate, scale, model)
+    glm_mat4_mul(translate, model, model)
+
+    local mvp = mat4()
+    glm_mat4_mul(self.draw_vp, model, mvp)
+    return mvp
+end
+
+function Canvas:DrawTextureSingle(cmd)
+    -- mvp
+    local mvp = self:GetTextureMVP(cmd)
+
+    -- uv
+    local uv_scale_offset = { 1, 1, 0, 0 }
+    uv_scale_offset[1] = cmd.sw / cmd.texture.width
+    uv_scale_offset[2] = cmd.sh / cmd.texture.height
+    uv_scale_offset[3] = cmd.sx / cmd.texture.width
+    uv_scale_offset[4] = cmd.sy / cmd.texture.height
+
+    self.quad_renderer:Render(cmd.texture, mvp, nil, uv_scale_offset, cmd.color)
+
+    self.draw_call = self.draw_call + 1
+end
+
+function Canvas:DrawTextureBatch(batch)
+    LOGW("draw texture batch size: " .. #batch)
 end
 
 return Canvas
