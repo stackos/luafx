@@ -272,7 +272,12 @@ function Canvas:DrawEnd()
         self.draw_texture_batches[#self.draw_texture_batches + 1] = batch
 
         for i = 1, #self.draw_texture_batches do
-            self:DrawTextureBatch(self.draw_texture_batches[i])
+            local batch = self.draw_texture_batches[i]
+            if #batch == 1 then
+                self:DrawTextureSingle(batch[1])
+            else
+                self:DrawTextureBatch(batch)
+            end
         end
     end
 end
