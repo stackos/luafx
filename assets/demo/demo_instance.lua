@@ -10,7 +10,7 @@ local _rbo_size = {
 }
 local _rot = 0
 local _depth_format = GL_DEPTH_COMPONENT16
-local _instance = nil
+local _instance_api = nil
 local _vbo_instance = nil
 
 local DemoInit = function(context, effect)
@@ -91,9 +91,9 @@ local DemoInit = function(context, effect)
     _depth_format = gl.GetDepthRenderbufferFormat(context)
 
     -- instance
-    _instance = gl.Instance(context)
+    _instance_api = gl.Instance(context)
 
-    if _instance.is_support then
+    if _instance_api.is_support then
         local positions = { }
         for i = 1, 40 do
             for j = 1, 40 do
@@ -205,15 +205,15 @@ local DemoRender = function(context, effect, input_texture, output_texture)
     gl.VertexAttrib(_program, "aPosition", 3, 4 * 7, 0)
     gl.VertexAttrib(_program, "aColor", 4, 4 * 7, 4 * 3)
 
-    if _instance.is_support then
+    if _instance_api.is_support then
         local vbo_instance = string.unpack("i", _vbo_instance)
         glBindBuffer(GL_ARRAY_BUFFER, vbo_instance)
 
         gl.VertexAttrib(_program, "aPositionInstance", 3, 0, 0)
 
-        _instance.VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 1)
-        _instance.DrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0, 40 * 40)
-        _instance.VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 0)
+        _instance_api.VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 1)
+        _instance_api.DrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0, 40 * 40)
+        _instance_api.VertexAttribDivisor(_program.attributes["aPositionInstance"].location, 0)
     end
 
     -- restore

@@ -258,9 +258,9 @@ function gl.GetRedTextureFormat(context)
     return format
 end
 
--- instance
+-- instance api
 function gl.Instance(context)
-    local instance = {
+    local instance_api = {
         is_support = false,
         support_instance = false,
         support_instance_ext = false,
@@ -278,33 +278,33 @@ function gl.Instance(context)
     }
     if version.is_es then
         if version.major >= 3 then
-            instance.support_instance = true
+            instance_api.support_instance = true
             LOGI("gl.Instance: support instance")
         elseif version.major == 2 then
             if LFX_Context_CheckGLExtension(context, "GL_EXT_instanced_arrays") == LFX_SUCCESS and
                 LFX_Context_CheckGLExtension(context, "GL_EXT_draw_instanced") == LFX_SUCCESS then
-                instance.support_instance_ext = true
+                instance_api.support_instance_ext = true
                 LOGI("gl.Instance: support instance ext")
             end
         end
     else
         if (version.major == 3 and version.minor >= 3) or (version.major > 3) then
-            instance.support_instance = true
+            instance_api.support_instance = true
             LOGI("gl.Instance: support instance")
         end
     end
-    instance.is_support = instance.support_instance or instance.support_instance_ext
-    if instance.support_instance then
-        instance.VertexAttribDivisor = glVertexAttribDivisor
-        instance.DrawElementsInstanced = glDrawElementsInstanced
-    elseif instance.support_instance_ext then
-        instance.VertexAttribDivisor = glVertexAttribDivisorEXT
-        instance.DrawElementsInstanced = glDrawElementsInstancedEXT
+    instance_api.is_support = instance_api.support_instance or instance_api.support_instance_ext
+    if instance_api.support_instance then
+        instance_api.VertexAttribDivisor = glVertexAttribDivisor
+        instance_api.DrawElementsInstanced = glDrawElementsInstanced
+    elseif instance_api.support_instance_ext then
+        instance_api.VertexAttribDivisor = glVertexAttribDivisorEXT
+        instance_api.DrawElementsInstanced = glDrawElementsInstancedEXT
     end
 
     gl.GetError()
 
-    return instance
+    return instance_api
 end
 
 -- texture

@@ -18,16 +18,27 @@ function Canvas:Init(context, width, height)
     self.text_program = self:CreateTextProgram()
     self.quad_renderer = QuadRenderer.New()
     self.quad_renderer:Init(self.context)
-    self.instance = gl.Instance(self.context)
     self.draw_call = 0
     self.draw_texture_cmds = { }
     self.draw_texture_batches = { }
     self.draw_vp = nil
+    self.instance_api = gl.Instance(self.context)
+    self.instance_buffer = nil
+    self.instance_buffer_size = 0
+    self.instance_vbo_ptr = nil
+    self.instance_vbo = 0
+    self.instance_vbo_size = 0
 
     self:SetSize(width, height)
 end
 
 function Canvas:Done()
+    if self.instance_vbo_ptr then
+        glDeleteBuffers(1, self.instance_vbo_ptr)
+    end
+    if self.instance_buffer then
+        LFX_Free(self.instance_buffer)
+    end
     self.quad_renderer:Done()
     if self.text_program then
         gl.DestroyProgram(self.text_program)
@@ -249,7 +260,7 @@ function Canvas:DrawTexture(texture, x, y, w, h, sx, sy, sw, sh, deg, color)
         color = color,
     }
 
-    if self.instance.is_support then
+    if self.instance_api.is_support then
         self.draw_texture_cmds[#self.draw_texture_cmds + 1] = cmd
     else
         self:DrawTextureSingle(cmd)
@@ -343,7 +354,60 @@ function Canvas:DrawTextureSingle(cmd)
 end
 
 function Canvas:DrawTextureBatch(batch)
-    LOGW("draw texture batch size: " .. #batch)
+    local instance_data = { }
+    for i = 1, #batch do
+        local cmd = batch[i]
+        local mvp = self:GetTextureMVP(cmd)
+
+        for j = 1, 16 do
+            instance_data[#instance_data + 1] = LFX_Float32ArrayGetElement(mvp, j - 1)
+        end
+        
+        local uv_scale_offset = { 1, 1, 0, 0 }
+        uv_scale_offset[1] = cmd.sw / cmd.texture.width
+        uv_scale_offset[2] = cmd.sh / cmd.texture.height
+        uv_scale_offset[3] = cmd.sx / cmd.texture.width
+        uv_scale_offset[4] = cmd.sy / cmd.texture.height
+
+        for j = 1, 4 do
+            instance_data[#instance_data + 1] = uv_scale_offset[j]
+        end
+
+        for j = 1, 4 do
+            instance_data[#instance_data + 1] = cmd.color[j]
+        end
+    end
+    
+    local instance_buffer_size = #instance_data * 4
+    if self.instance_buffer == nil or self.instance_buffer_size < instance_buffer_size then
+        if self.instance_buffer then
+            LFX_Free(self.instance_buffer)
+            self.instance_buffer = nil
+        end
+        self.instance_buffer = LFX_Float32ArrayCreateFromTable(instance_data)
+        self.instance_buffer_size = instance_buffer_size
+    else
+        LFX_Float32ArrayCopyFromTable(self.instance_buffer, 0, instance_data, 1, #instance_data)
+    end
+
+    if self.instance_vbo_ptr == nil then
+        self.instance_vbo_ptr = LFX_BinaryString(4)
+        glGenBuffers(1, self.instance_vbo_ptr)
+        self.instance_vbo = string.unpack("i", self.instance_vbo_ptr)
+    end
+    
+    glBindBuffer(GL_ARRAY_BUFFER, self.instance_vbo)
+    if self.instance_vbo_size < self.instance_buffer_size then
+        self.instance_vbo_size = self.instance_buffer_size
+        glBufferData(GL_ARRAY_BUFFER, self.instance_vbo_size, self.instance_buffer, GL_DYNAMIC_DRAW)
+    else
+        glBufferSubData(GL_ARRAY_BUFFER, 0, self.instance_buffer_size, self.instance_buffer)
+    end
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+    self.quad_renderer:RenderInstance(batch[1].texture, nil, self.instance_api, self.instance_vbo, #batch)
+
+    self.draw_call = self.draw_call + 1
 end
 
 return Canvas

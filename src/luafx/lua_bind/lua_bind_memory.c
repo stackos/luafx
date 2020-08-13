@@ -51,7 +51,7 @@ static int lua_LFX_Free(lua_State* L)
 
 static int lua_LFX_MemoryAsString(lua_State* L)
 {
-    const char* string = (const char*) luaL_checklightuserdata(L, 1);
+    const char* string = (const char*) lua_touserdata_or_string(L, 1);
     if (string)
     {
         lua_pushstring(L, string);
@@ -65,8 +65,8 @@ static int lua_LFX_MemoryAsString(lua_State* L)
 
 static int lua_LFX_MemoryCopy(lua_State* L)
 {
-    void* dst = luaL_checklightuserdata(L, 1);
-    void* src = luaL_checklightuserdata(L, 2);
+    void* dst = lua_touserdata_or_string(L, 1);
+    void* src = lua_touserdata_or_string(L, 2);
     int size = (int) luaL_checkintegerstrict(L, 3);
     if (dst && src && size > 0)
     {
@@ -107,11 +107,11 @@ static int lua_LFX_Uint16ArrayCreateFromTable(lua_State* L)
     int size = (int) lua_rawlen(L, 1);
     if (size > 0)
     {
-        unsigned short* array = (unsigned short*) malloc(sizeof(unsigned short) * size);
+        uint16_t* array = (uint16_t*) malloc(sizeof(uint16_t) * size);
         for (int i = 1; i <= size; ++i)
         {
             lua_rawgeti(L, 1, i);
-            array[i - 1] = (unsigned short) luaL_checkintegerstrict(L, -1);
+            array[i - 1] = (uint16_t) luaL_checkintegerstrict(L, -1);
             lua_pop(L, 1);
         }
         lua_pushlightuserdata(L, array);
@@ -143,6 +143,81 @@ static int lua_LFX_Float32ArrayCreateFromTable(lua_State* L)
         luaL_argerror(L, 1, "size invalid");
     }
     return 1;
+}
+
+static int lua_LFX_Int32ArrayCopyFromTable(lua_State* L)
+{
+    void* dst = lua_touserdata_or_string(L, 1);
+    int dst_start = (int) luaL_checkintegerstrict(L, 2);
+    luaL_checktype(L, 3, LUA_TTABLE);
+    int src_start = (int) luaL_checkintegerstrict(L, 4);
+    int count = (int) luaL_checkintegerstrict(L, 5);
+    int size = (int) lua_rawlen(L, 3);
+    if (src_start >= 1 && count > 0 && src_start + count - 1 <= size)
+    {
+        int* array = (int*) dst;
+        for (int i = src_start; i < src_start + count; ++i)
+        {
+            lua_rawgeti(L, 3, i);
+            array[dst_start + i - src_start] = (int) luaL_checkintegerstrict(L, -1);
+            lua_pop(L, 1);
+        }
+    }
+    else
+    {
+        luaL_argerror(L, 1, "size invalid");
+    }
+    return 0;
+}
+
+static int lua_LFX_Uint16ArrayCopyFromTable(lua_State* L)
+{
+    void* dst = lua_touserdata_or_string(L, 1);
+    int dst_start = (int) luaL_checkintegerstrict(L, 2);
+    luaL_checktype(L, 3, LUA_TTABLE);
+    int src_start = (int) luaL_checkintegerstrict(L, 4);
+    int count = (int) luaL_checkintegerstrict(L, 5);
+    int size = (int) lua_rawlen(L, 3);
+    if (src_start >= 1 && count > 0 && src_start + count - 1 <= size)
+    {
+        uint16_t* array = (uint16_t*) dst;
+        for (int i = src_start; i < src_start + count; ++i)
+        {
+            lua_rawgeti(L, 3, i);
+            array[dst_start + i - src_start] = (uint16_t) luaL_checkintegerstrict(L, -1);
+            lua_pop(L, 1);
+        }
+    }
+    else
+    {
+        luaL_argerror(L, 1, "size invalid");
+    }
+    return 0;
+}
+
+static int lua_LFX_Float32ArrayCopyFromTable(lua_State* L)
+{
+    void* dst = lua_touserdata_or_string(L, 1);
+    int dst_start = (int) luaL_checkintegerstrict(L, 2);
+    luaL_checktype(L, 3, LUA_TTABLE);
+    int src_start = (int) luaL_checkintegerstrict(L, 4);
+    int count = (int) luaL_checkintegerstrict(L, 5);
+    int size = (int) lua_rawlen(L, 3);
+    if (src_start >= 1 && count > 0 && src_start + count - 1 <= size)
+    {
+        float* array = (float*) dst;
+        for (int i = src_start; i < src_start + count; ++i)
+        {
+            lua_rawgeti(L, 3, i);
+            array[dst_start + i - src_start] = (float) luaL_checknumber(L, -1);
+            lua_pop(L, 1);
+        }
+    }
+    else
+    {
+        luaL_argerror(L, 1, "size invalid");
+    }
+    return 0;
 }
 
 static int lua_LFX_PointerArrayCreate(lua_State* L)
@@ -353,6 +428,9 @@ static const luaL_Reg memory_funcs[] = {
     REG_FUNC(LFX_Int32ArrayCreateFromTable),
     REG_FUNC(LFX_Uint16ArrayCreateFromTable),
     REG_FUNC(LFX_Float32ArrayCreateFromTable),
+    REG_FUNC(LFX_Int32ArrayCopyFromTable),
+    REG_FUNC(LFX_Uint16ArrayCopyFromTable),
+    REG_FUNC(LFX_Float32ArrayCopyFromTable),
     REG_FUNC(LFX_PointerArrayCreate),
     REG_FUNC(LFX_Int32ArrayGetElement),
     REG_FUNC(LFX_Int32ArraySetElement),
