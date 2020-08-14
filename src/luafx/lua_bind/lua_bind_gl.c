@@ -307,8 +307,8 @@ static const luaL_Reg gles2_funcs[] = {
 
     // ext
     REG_FUNC(glVertexAttribDivisorEXT), // ext GL_EXT_instanced_arrays
-    REG_FUNC(glDrawArraysInstancedEXT), // ext GL_EXT_draw_instanced
-    REG_FUNC(glDrawElementsInstancedEXT), // ext GL_EXT_draw_instanced
+    REG_FUNC(glDrawArraysInstancedEXT), // ext GL_EXT_instanced_arrays
+    REG_FUNC(glDrawElementsInstancedEXT), // ext GL_EXT_instanced_arrays
 
     { NULL, NULL }
 };

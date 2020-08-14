@@ -281,8 +281,8 @@ function gl.Instance(context)
             instance_api.support_instance = true
             LOGI("gl.Instance: support instance")
         elseif version.major == 2 then
-            if LFX_Context_CheckGLExtension(context, "GL_EXT_instanced_arrays") == LFX_SUCCESS and
-                LFX_Context_CheckGLExtension(context, "GL_EXT_draw_instanced") == LFX_SUCCESS then
+            if LFX_Context_CheckGLExtension(context, "GL_EXT_instanced_arrays") == LFX_SUCCESS or
+                LFX_Context_CheckGLExtension(context, "GL_ANGLE_instanced_arrays") == LFX_SUCCESS then
                 instance_api.support_instance_ext = true
                 LOGI("gl.Instance: support instance ext")
             end
