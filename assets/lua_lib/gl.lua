@@ -300,6 +300,8 @@ function gl.Instance(context)
     elseif instance_api.support_instance_ext then
         instance_api.VertexAttribDivisor = glVertexAttribDivisorEXT
         instance_api.DrawElementsInstanced = glDrawElementsInstancedEXT
+    else
+        LOGI("gl.Instance: not support instance")
     end
 
     gl.GetError()
