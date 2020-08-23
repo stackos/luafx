@@ -25,7 +25,7 @@ static int lua_LFX_Malloc(lua_State* L)
     int size = (int) luaL_checkintegerstrict(L, 1);
     if (size > 0)
     {
-        void* buffer = malloc(size);
+        void* buffer = calloc(size, 1);
         lua_pushlightuserdata(L, buffer);
     }
     else
@@ -77,6 +77,21 @@ static int lua_LFX_MemoryCopy(lua_State* L)
         luaL_argerror(L, 1, "invalid input");
     }
     return 0;
+}
+
+static int lua_LFX_MemoryOffset(lua_State* L)
+{
+    void* p = lua_touserdata_or_string(L, 1);
+    int offset = (int) luaL_checkintegerstrict(L, 2);
+    if (p)
+    {
+        lua_pushlightuserdata(L, &((uint8_t*) p)[offset]);
+    }
+    else
+    {
+        luaL_argerror(L, 1, "invalid input");
+    }
+    return 1;
 }
 
 static int lua_LFX_Int32ArrayCreateFromTable(lua_State* L)
@@ -425,6 +440,7 @@ static const luaL_Reg memory_funcs[] = {
     REG_FUNC(LFX_Free),
     REG_FUNC(LFX_MemoryAsString),
     REG_FUNC(LFX_MemoryCopy),
+    REG_FUNC(LFX_MemoryOffset),
     REG_FUNC(LFX_Int32ArrayCreateFromTable),
     REG_FUNC(LFX_Uint16ArrayCreateFromTable),
     REG_FUNC(LFX_Float32ArrayCreateFromTable),

@@ -12,7 +12,7 @@ local DemoInit = function(context, effect)
 
     local font_path = LFX_Effect_GetEffectDir(effect) .. "/font/STXINWEI.TTF"
     _font = Font.New()
-    _font:Init(context, font_path, 20)
+    _font:Init(context, font_path, 20, 2)
 
     _texture = gl.LoadTexture(context, LFX_Effect_GetEffectDir(effect) .. "/input/1080x1920.jpg", GL_LINEAR, GL_CLAMP_TO_EDGE)
 end
@@ -44,7 +44,6 @@ local DemoRender = function(context, effect, input_texture, output_texture)
     end
 
     _canvas:DrawBegin()
-    _canvas:DrawText(_label, 0, 20, { 1, 1, 1, 1 })
     for i = 1, 10 do
         for j = 1, 5 do
             _canvas:DrawTexture(_texture,
@@ -56,6 +55,8 @@ local DemoRender = function(context, effect, input_texture, output_texture)
                 { 1, (j - 1) / 5, (i - 1) / 10, 1 })
         end
     end
+    _canvas:DrawText(_label, 0, 100, { 1, 1, 1, 1 })
+    --_canvas:DrawTexture(_font:GetTexture(), 1024, 1024, 2048, 2048, 0, 0, 128, 128)
     _canvas:DrawEnd()
 end
 
