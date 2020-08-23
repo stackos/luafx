@@ -1,6 +1,11 @@
 local gl = require("gl")
 local QuadRenderer = require("QuadRenderer")
 
+local DrawCmd = {
+    DrawText = 0,
+    DrawTexture = 1,
+}
+
 local Canvas = { }
 
 -- public
@@ -19,8 +24,8 @@ function Canvas:Init(context, width, height)
     self.quad_renderer = QuadRenderer.New()
     self.quad_renderer:Init(self.context)
     self.draw_call = 0
-    self.draw_texture_cmds = { }
-    self.draw_texture_batches = { }
+    self.draw_cmds = { }
+    self.draw_batches = { }
     self.draw_vp = nil
     self.instance_api = gl.Instance(self.context)
     self.instance_buffer = nil
@@ -176,10 +181,143 @@ end
 
 function Canvas:DrawBegin()
     self.draw_call = 0
-    self.draw_texture_cmds = { }
+    self.draw_cmds = { }
 end
 
 function Canvas:DrawText(text_mesh, x, y, color)
+    local cmd = {
+        type = DrawCmd.DrawText,
+        text_mesh = text_mesh,
+        x = x,
+        y = y,
+        color = color,
+    }
+    
+    if self.instance_api.is_support then
+        self.draw_cmds[#self.draw_cmds + 1] = cmd
+    else
+        self:DrawTextSingle(cmd)
+    end
+end
+
+function Canvas:DrawTexture(texture, x, y, w, h, sx, sy, sw, sh, deg, color)
+    if texture == nil or x == nil or y == nil then
+        return
+    end
+
+    if w == nil then
+        w = texture.width
+    end
+    if h == nil then
+        h = texture.height
+    end
+    if sx == nil then
+        sx = 0
+    end
+    if sy == nil then
+        sy = 0
+    end
+    if sw == nil then
+        sw = texture.width
+    end
+    if sh == nil then
+        sh = texture.height
+    end
+    if deg == nil then
+        deg = 0
+    end
+    if color == nil then
+        color = { 1, 1, 1, 1 }
+    end
+
+    local cmd = {
+        type = DrawCmd.DrawTexture,
+        texture = texture,
+        x = x,
+        y = y,
+        w = w,
+        h = h,
+        sx = sx,
+        sy = sy,
+        sw = sw,
+        sh = sh,
+        deg = deg,
+        color = color,
+    }
+
+    if self.instance_api.is_support then
+        self.draw_cmds[#self.draw_cmds + 1] = cmd
+    else
+        self:DrawTextureSingle(cmd)
+    end
+end
+
+function Canvas:DrawEnd()
+    if #self.draw_cmds > 0 then
+        self.draw_batches = { }
+        local batch = { }
+        for i = 1, #self.draw_cmds do
+            local cmd = self.draw_cmds[i]
+            if #batch == 0 then
+                batch[#batch + 1] = cmd
+            elseif batch[#batch].type == DrawCmd.DrawTexture and cmd.type == DrawCmd.DrawTexture and batch[#batch].texture == cmd.texture then
+                batch[#batch + 1] = cmd
+            else
+                self.draw_batches[#self.draw_batches + 1] = batch
+                batch = { cmd }
+            end
+        end
+        self.draw_batches[#self.draw_batches + 1] = batch
+
+        for i = 1, #self.draw_batches do
+            local batch = self.draw_batches[i]
+            if #batch == 1 then
+                if batch[1].type == DrawCmd.DrawTexture then
+                    self:DrawTextureSingle(batch[1])
+                elseif batch[1].type == DrawCmd.DrawText then
+                    self:DrawTextSingle(batch[1])
+                end
+            else
+                self:DrawTextureBatch(batch)
+            end
+        end
+    end
+end
+
+-- private
+function Canvas:CreateTextProgram()
+    local vs = [[
+        uniform mat4 uMatrix;
+        attribute vec2 aPosition;
+        attribute vec2 aTextureCoord;
+        varying vec2 vTextureCoord;
+        void main()
+        {
+            gl_Position = uMatrix * vec4(aPosition, 0.0, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+        ]]
+    local fs = [[
+        precision highp float;
+        uniform sampler2D uTexture0;
+        uniform vec4 uColor;
+        varying vec2 vTextureCoord;
+        void main()
+        {
+            float a = texture2D(uTexture0, vTextureCoord).r;
+            gl_FragColor = vec4(uColor.rgb, uColor.a * a);
+        }
+        ]]
+
+    return gl.CreateProgram(self.context, vs, fs)
+end
+
+function Canvas:DrawTextSingle(cmd)
+    local text_mesh = cmd.text_mesh
+    local x = cmd.x
+    local y = cmd.y
+    local color = cmd.color
+    
     local font = text_mesh.font
     local index_count = #text_mesh.indices
     local vbo = text_mesh.vbo
@@ -214,111 +352,6 @@ function Canvas:DrawText(text_mesh, x, y, color)
     glDisable(GL_BLEND)
 
     self.draw_call = self.draw_call + 1
-end
-
-function Canvas:DrawTexture(texture, x, y, w, h, sx, sy, sw, sh, deg, color)
-    if texture == nil or x == nil or y == nil then
-        return
-    end
-
-    if w == nil then
-        w = texture.width
-    end
-    if h == nil then
-        h = texture.height
-    end
-    if sx == nil then
-        sx = 0
-    end
-    if sy == nil then
-        sy = 0
-    end
-    if sw == nil then
-        sw = texture.width
-    end
-    if sh == nil then
-        sh = texture.height
-    end
-    if deg == nil then
-        deg = 0
-    end
-    if color == nil then
-        color = { 1, 1, 1, 1 }
-    end
-
-    local cmd = {
-        texture = texture,
-        x = x,
-        y = y,
-        w = w,
-        h = h,
-        sx = sx,
-        sy = sy,
-        sw = sw,
-        sh = sh,
-        deg = deg,
-        color = color,
-    }
-
-    if self.instance_api.is_support then
-        self.draw_texture_cmds[#self.draw_texture_cmds + 1] = cmd
-    else
-        self:DrawTextureSingle(cmd)
-    end
-end
-
-function Canvas:DrawEnd()
-    if #self.draw_texture_cmds > 0 then
-        self.draw_texture_batches = { }
-        local batch = { }
-        for i = 1, #self.draw_texture_cmds do
-            local cmd = self.draw_texture_cmds[i]
-            if #batch == 0 or batch[#batch].texture == cmd.texture then
-                batch[#batch + 1] = cmd
-            else
-                self.draw_texture_batches[#self.draw_texture_batches + 1] = batch
-                batch = { cmd }
-            end
-        end
-        self.draw_texture_batches[#self.draw_texture_batches + 1] = batch
-
-        for i = 1, #self.draw_texture_batches do
-            local batch = self.draw_texture_batches[i]
-            if #batch == 1 then
-                self:DrawTextureSingle(batch[1])
-            else
-                self:DrawTextureBatch(batch)
-            end
-        end
-    end
-end
-
--- private
-function Canvas:CreateTextProgram()
-    local vs = [[
-        uniform mat4 uMatrix;
-        attribute vec2 aPosition;
-        attribute vec2 aTextureCoord;
-        varying vec2 vTextureCoord;
-        void main()
-        {
-            gl_Position = uMatrix * vec4(aPosition, 0.0, 1.0);
-            vTextureCoord = aTextureCoord;
-        }
-        ]]
-    local fs = [[
-        precision highp float;
-        uniform sampler2D uTexture0;
-        uniform vec4 uColor;
-        varying vec2 vTextureCoord;
-        void main()
-        {
-            float a = texture2D(uTexture0, vTextureCoord).r;
-            gl_FragColor = vec4(uColor.rgb, uColor.a * a);
-        }
-        ]]
-
-    return gl.CreateProgram(self.context, vs, fs)
 end
 
 function Canvas:GetTextureMVP(cmd)
