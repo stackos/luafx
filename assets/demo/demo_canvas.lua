@@ -55,8 +55,8 @@ local DemoRender = function(context, effect, input_texture, output_texture)
                 { 1, (j - 1) / 5, (i - 1) / 10, 1 })
         end
     end
-    _canvas:DrawText(_label, 0, 100, { 1, 1, 1, 1 })
-    --_canvas:DrawTexture(_font:GetTexture(), 1024, 1024, 2048, 2048, 0, 0, 128, 128)
+    _canvas:DrawText(_label, 0, 20, { 1, 1, 1, 1 }, { 0, 0, 0, 1 })
+    --_canvas:DrawTexture(_font:GetTexture(), 512, 512, 1024, 1024, 0, 0, 1024, 1024)
     _canvas:DrawEnd()
 end
 

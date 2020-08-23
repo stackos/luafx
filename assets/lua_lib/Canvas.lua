@@ -65,7 +65,7 @@ function Canvas:SetSize(width, height)
     self.draw_vp = vp
 end
 
-function Canvas:CreateText(str, font)
+function Canvas:CreateText(str, font, bold_text_mesh)
     local vertices = { }
     local indices = { }
     local rect = nil
@@ -78,6 +78,12 @@ function Canvas:CreateText(str, font)
     for i = 1, #codes do
         local code = codes[i]
         local glyph = font:GetGlyph(code)
+        local bitmap_box = glyph.bitmap_box
+        local texture_rect = glyph.texture_rect
+        
+        if bold_text_mesh then
+            texture_rect = glyph.bold_texture_rect
+        end
 
         if glyph.char == "\n" then
             pen[1] = 0
@@ -86,10 +92,10 @@ function Canvas:CreateText(str, font)
             goto continue
         end
 
-        local left = pen[1] + glyph.bitmap_box[1]
-        local top = pen[2] + glyph.bitmap_box[2]
-        local right = left + glyph.bitmap_box[3] - glyph.bitmap_box[1]
-        local bottom = top + glyph.bitmap_box[4] - glyph.bitmap_box[2]
+        local left = pen[1] + bitmap_box[1]
+        local top = pen[2] + bitmap_box[2]
+        local right = left + bitmap_box[3] - bitmap_box[1]
+        local bottom = top + bitmap_box[4] - bitmap_box[2]
 
         if rect == nil then
             rect = { left, top, right, bottom }
@@ -103,20 +109,20 @@ function Canvas:CreateText(str, font)
         local vertex_count = math.floor(#vertices / 4)
         vertices[#vertices + 1] = left
         vertices[#vertices + 1] = -top
-        vertices[#vertices + 1] = glyph.texture_rect[1]
-        vertices[#vertices + 1] = glyph.texture_rect[2]
+        vertices[#vertices + 1] = texture_rect[1]
+        vertices[#vertices + 1] = texture_rect[2]
         vertices[#vertices + 1] = left
         vertices[#vertices + 1] = -bottom
-        vertices[#vertices + 1] = glyph.texture_rect[1]
-        vertices[#vertices + 1] = glyph.texture_rect[4]
+        vertices[#vertices + 1] = texture_rect[1]
+        vertices[#vertices + 1] = texture_rect[4]
         vertices[#vertices + 1] = right
         vertices[#vertices + 1] = -bottom
-        vertices[#vertices + 1] = glyph.texture_rect[3]
-        vertices[#vertices + 1] = glyph.texture_rect[4]
+        vertices[#vertices + 1] = texture_rect[3]
+        vertices[#vertices + 1] = texture_rect[4]
         vertices[#vertices + 1] = right
         vertices[#vertices + 1] = -top
-        vertices[#vertices + 1] = glyph.texture_rect[3]
-        vertices[#vertices + 1] = glyph.texture_rect[2]
+        vertices[#vertices + 1] = texture_rect[3]
+        vertices[#vertices + 1] = texture_rect[2]
         indices[#indices + 1] = vertex_count + 0
         indices[#indices + 1] = vertex_count + 1
         indices[#indices + 1] = vertex_count + 2
@@ -167,6 +173,12 @@ function Canvas:CreateText(str, font)
         ibo = ibo,
     }
 
+    if font.bold_size > 0 then
+        if bold_text_mesh == nil or bold_text_mesh == false then
+            text_mesh.bold_text_mesh = self:CreateText(str, font, true)
+        end
+    end
+
     return text_mesh
 end
 
@@ -184,7 +196,7 @@ function Canvas:DrawBegin()
     self.draw_cmds = { }
 end
 
-function Canvas:DrawText(text_mesh, x, y, color)
+function Canvas:DrawText(text_mesh, x, y, color, outline_color)
     local cmd = {
         type = DrawCmd.DrawText,
         text_mesh = text_mesh,
@@ -193,6 +205,23 @@ function Canvas:DrawText(text_mesh, x, y, color)
         color = color,
     }
     
+    if text_mesh.font.bold_size > 0 and outline_color then
+        local offset = math.floor(text_mesh.font.bold_size / 2)
+        local bold_cmd = {
+            type = DrawCmd.DrawText,
+            text_mesh = text_mesh.bold_text_mesh,
+            x = x - offset,
+            y = y + offset,
+            color = outline_color,
+        }
+
+        if self.instance_api.is_support then
+            self.draw_cmds[#self.draw_cmds + 1] = bold_cmd
+        else
+            self:DrawTextSingle(bold_cmd)
+        end
+    end
+
     if self.instance_api.is_support then
         self.draw_cmds[#self.draw_cmds + 1] = cmd
     else
@@ -381,7 +410,14 @@ function Canvas:DrawTextureSingle(cmd)
     uv_scale_offset[3] = cmd.sx / cmd.texture.width
     uv_scale_offset[4] = cmd.sy / cmd.texture.height
 
+    -- state
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
     self.quad_renderer:Render(cmd.texture, mvp, nil, uv_scale_offset, cmd.color)
+
+    -- restore
+    glDisable(GL_BLEND)
 
     self.draw_call = self.draw_call + 1
 end
@@ -438,7 +474,14 @@ function Canvas:DrawTextureBatch(batch)
     end
     glBindBuffer(GL_ARRAY_BUFFER, 0)
 
+    -- state
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
     self.quad_renderer:RenderInstance(batch[1].texture, nil, self.instance_api, self.instance_vbo, #batch)
+
+    -- restore
+    glDisable(GL_BLEND)
 
     self.draw_call = self.draw_call + 1
 end

@@ -95,6 +95,7 @@ function Font:GetGlyph(code)
         box = { 0, 0, 0, 0 },
         bitmap_box = { 0, 0, 0, 0 },
         texture_rect = { 0, 0, 0, 0 },
+        bold_texture_rect = { 0, 0, 0, 0 },
     }
     self.glyph_map[char] = glyph
 
@@ -124,9 +125,9 @@ function Font:GetGlyph(code)
 
         stbtt_GetGlyphBitmapBoxSubpixel(self.font, glyph.glyph_index, self.font_scale, self.font_scale, 0, 0, px0, py0, px1, py1)
         x0 = string.unpack("i", px0)
-        y0 = string.unpack("i", py0)
+        y0 = string.unpack("i", py0) - self.bold_size
         x1 = string.unpack("i", px1) + self.bold_size
-        y1 = string.unpack("i", py1) + self.bold_size
+        y1 = string.unpack("i", py1)
         glyph.bitmap_box = { x0, y0, x1, y1 }
 
         local w = x1 - x0
@@ -134,10 +135,11 @@ function Font:GetGlyph(code)
         local bitmap = LFX_Malloc(w * h)
         local p = LFX_MemoryOffset(bitmap, w * self.bold_size)
         stbtt_MakeGlyphBitmapSubpixel(self.font, p, w - self.bold_size, h - self.bold_size, w, self.font_scale, self.font_scale, 0, 0, glyph.glyph_index)
+        glyph.texture_rect = self:FillTextureRect(bitmap, w, h)
         if self.bold_size > 0 then
             stbtt_EmboldenBitmap(bitmap, w, h, self.bold_size, self.bold_size)
+            glyph.bold_texture_rect = self:FillTextureRect(bitmap, w, h)
         end
-        glyph.texture_rect = self:FillTextureRect(bitmap, w, h)
         LFX_Free(bitmap)
     end
 
