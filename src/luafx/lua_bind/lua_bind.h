@@ -376,6 +376,15 @@
     name(p1, p2, p3, p4, p5); \
     return 0; }
 
+#define DEF_FUNC_V_AIIII(name) static int lua_##name(lua_State* L) { \
+    void* p1 = lua_touserdata_or_string(L, 1); \
+    int p2 = (int) luaL_checkintegerstrict(L, 2); \
+    int p3 = (int) luaL_checkintegerstrict(L, 3); \
+    int p4 = (int) luaL_checkintegerstrict(L, 4); \
+    int p5 = (int) luaL_checkintegerstrict(L, 5); \
+    name(p1, p2, p3, p4, p5); \
+    return 0; }
+
 #define DEF_FUNC_V_IIIIIA(name) static int lua_##name(lua_State* L) { \
     int p1 = (int) luaL_checkintegerstrict(L, 1); \
     int p2 = (int) luaL_checkintegerstrict(L, 2); \
