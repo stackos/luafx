@@ -6,14 +6,6 @@ local DrawCmd = {
     DrawTexture = 1,
 }
 
-local PathAction = {
-    MoveTo = 0,
-    LineTo = 1,
-    QuadraticCurveTo = 2,
-    BezierCurveTo = 3,
-    ArcTo = 4,
-}
-
 local Canvas = { }
 
 -- public
@@ -41,8 +33,6 @@ function Canvas:Init(context, width, height)
     self.instance_vbo_ptr = nil
     self.instance_vbo = 0
     self.instance_vbo_size = 0
-    self.pathes = { }
-    self.path = nil
 
     self:SetSize(width, height)
 end
@@ -204,9 +194,6 @@ end
 function Canvas:DrawBegin()
     self.draw_call = 0
     self.draw_cmds = { }
-    self.pathes = { }
-    self.path = nil
-    self:BeginPath()
 end
 
 function Canvas:DrawText(text_mesh, x, y, color, outline_color)
@@ -292,64 +279,6 @@ function Canvas:DrawTexture(texture, x, y, w, h, sx, sy, sw, sh, deg, color)
     else
         self:DrawTextureSingle(cmd)
     end
-end
-
-function Canvas:BeginPath()
-    self.path = { }
-end
-
-function Canvas:MoveTo(x, y)
-    self.path[#self.path + 1] = { PathAction.MoveTo, x, y }
-end
-
-function Canvas:LineTo(x, y)
-    if #self.path == 0 then return end
-    self.path[#self.path + 1] = { PathAction.LineTo, x, y }
-end
-
-function Canvas:QuadraticCurveTo(cpx, cpy, x, y)
-    if #self.path == 0 then return end
-    self.path[#self.path + 1] = { PathAction.QuadraticCurveTo, cpx, cpy, x, y }
-end
-
-function Canvas:BezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
-    if #self.path == 0 then return end
-    self.path[#self.path + 1] = { PathAction.BezierCurveTo, cp1x, cp1y, cp2x, cp2y, x, y }
-end
-
-function Canvas:ArcTo(cp1x, cp1y, cp2x, cp2y, r)
-    if #self.path == 0 then return end
-    self.path[#self.path + 1] = { PathAction.ArcTo, cp1x, cp1y, cp2x, cp2y, r }
-end
-
-function Canvas:ClosePath()
-    for i = #self.path, 1, -1 do
-        local act = self.path[i]
-        if act[1] == PathAction.MoveTo then
-            self:LineTo(act[2], act[3])
-            break
-        end
-    end
-end
-
-function Canvas:Rect(x, y, w, h)
-    self:MoveTo(x, y)
-    self:LineTo(x, y + h)
-    self:LineTo(x + w, y + h)
-    self:LineTo(x + w, y)
-    self:LineTo(x, y)
-end
-
-function Canvas:Arc(x, y, r, start_angle, end_angle, counter_clock_wise)
-
-end
-
-function Canvas:Fill()
-    
-end
-
-function Canvas:Stroke()
-    
 end
 
 function Canvas:DrawEnd()
