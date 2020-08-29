@@ -16,6 +16,7 @@ local _effect = {
     --demo = require("demo/demo_depth_texture"),
     --demo = require("demo/demo_instance"),
     demo = require("demo/demo_canvas"),
+    --demo = require("game/game"),
 
     Init = function(self, context, effect)
         local build_platform = LFX_BinaryString(4)
@@ -33,7 +34,12 @@ local _effect = {
 
     Render = function(self, context, effect, input_texture, output_texture)
         gl.AttachColorTexture(output_texture)
-        LFX_Context_RenderQuad(context, input_texture, LFX_MAT4_FLIP_Y)
+        if input_texture then
+            LFX_Context_RenderQuad(context, input_texture, LFX_MAT4_FLIP_Y)
+        else
+            glClearColor(0, 0, 0, 0)
+            glClear(GL_COLOR_BUFFER_BIT)
+        end
 
         self.demo.Render(context, effect, input_texture, output_texture)
     end,

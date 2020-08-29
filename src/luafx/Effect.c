@@ -171,7 +171,7 @@ LFX_RESULT LFX_Effect_Load(LFX_Effect* thiz, const char* path)
 
 LFX_RESULT LFX_Effect_Render(LFX_Effect* thiz, const LFX_Texture* input_texture, const LFX_Texture* output_texture, void* output_image)
 {
-    if (input_texture == NULL || output_texture == NULL)
+    if (output_texture == NULL)
     {
         RETURN_ERR(LFX_INVALID_INPUT);
     }
@@ -196,8 +196,15 @@ LFX_RESULT LFX_Effect_Render(LFX_Effect* thiz, const LFX_Texture* input_texture,
 
     lua_pushlightuserdata(L, thiz->context);
     lua_pushlightuserdata(L, thiz);
-    lua_newtable(L);
-    LFX_PushTexture(L, -1, input_texture);
+    if (input_texture)
+    {
+        lua_newtable(L);
+        LFX_PushTexture(L, -1, input_texture);
+    }
+    else
+    {
+        lua_pushnil(L);
+    }
     lua_newtable(L);
     LFX_PushTexture(L, -1, output_texture);
 

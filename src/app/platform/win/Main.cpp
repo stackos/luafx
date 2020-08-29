@@ -40,7 +40,6 @@ static void GLContext_Done(GLContext* thiz)
 static GLContext g_gl_context;
 static int g_context = LFX_INVALID_HANDLE;
 static int g_effect = LFX_INVALID_HANDLE;
-static LFX_Texture g_texture_in;
 static LFX_Texture g_texture_out;
 static char* g_message_buffer = NULL;
 static size_t g_message_buffer_size = 0;
@@ -138,19 +137,16 @@ static void InitEffectContext()
     sprintf(path, "%s/../../../%s", work_dir, "assets/effect.lua");
     LFX_LoadEffect(g_context, path, &g_effect);
 
-    sprintf(path, "%s/../../../%s", work_dir, "assets/input/1280x720.jpg");
-    LFX_LoadTexture2D(g_context, path, &g_texture_in);
-
     memset(&g_texture_out, 0, sizeof(g_texture_out));
     g_texture_out.target = GL_TEXTURE_2D;
     g_texture_out.format = GL_RGBA;
-    g_texture_out.width = g_texture_in.width;
-    g_texture_out.height = g_texture_in.height;
+    g_texture_out.width = 1080;
+    g_texture_out.height = 1920;
     g_texture_out.filter_mode = GL_LINEAR;
     g_texture_out.wrap_mode = GL_CLAMP_TO_EDGE;
     LFX_CreateTexture(g_context, &g_texture_out);
 
-    ResizeWindow(g_texture_in.width, g_texture_in.height);
+    ResizeWindow(g_texture_out.width, g_texture_out.height);
 
     // message buffer
     g_message_buffer_size = 1024;
@@ -162,7 +158,6 @@ static void InitEffectContext()
 static void DoneEffectContext()
 {
     free(g_message_buffer);
-    LFX_DestroyTexture(g_context, &g_texture_in);
     LFX_DestroyTexture(g_context, &g_texture_out);
     LFX_DestroyEffect(g_context, g_effect);
     LFX_DestroyContext(g_context);
@@ -193,7 +188,7 @@ static bool DrawFrame()
 {
     SendMessageSetEffectTimestamp();
 
-    LFX_RenderEffect(g_context, g_effect, &g_texture_in, &g_texture_out, NULL);
+    LFX_RenderEffect(g_context, g_effect, NULL, &g_texture_out, NULL);
 
     glViewport(0, 0, g_gl_context.width, g_gl_context.height);
     glClearColor(0, 0, 0, 0);
@@ -360,7 +355,7 @@ int WINAPI WinMain(
                     g_fps_update_time = t;
 
                     char title[1024];
-                    sprintf(title, "luafx_app [w: %d h: %d] [fps: %d] ", g_texture_in.width, g_texture_in.height, fps);
+                    sprintf(title, "luafx_app [w: %d h: %d] [fps: %d] ", g_texture_out.width, g_texture_out.height, fps);
                     SetWindowText(hwnd, title);
                 }
                 g_frame_count += 1;
