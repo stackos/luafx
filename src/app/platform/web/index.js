@@ -113,7 +113,7 @@ function PaintToolDraw(canvas, c) {
     c.lineTo(100 + 1, 300);
     c.stroke();
 
-    c.lineWidth = 4;
+    c.lineWidth = 8;
     c.beginPath();
     c.moveTo(200, 400);
     c.arcTo(200, 200, 600, 392, 8);
@@ -121,14 +121,14 @@ function PaintToolDraw(canvas, c) {
     c.lineTo(600, 400);
     c.stroke();
 
-    c.lineWidth = 2;
+    c.lineWidth = 4;
     c.beginPath();
     for (var i = 0; i < 17; ++i)
     {
         const p = 0.6;
         const len = (600 - 200) / (16 + p);
-        c.moveTo(600 - len * i, 401);
-        c.lineTo(600 - len * i - len * p, 401);
+        c.moveTo(600 - len * i, 402);
+        c.lineTo(600 - len * i - len * p, 402);
     }
     c.stroke();
 
