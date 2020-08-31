@@ -36,10 +36,7 @@
     NSTimer* m_timer;
     int m_context;
     int m_effect;
-    LFX_Texture m_texture_in;
     LFX_Texture m_texture_out;
-    void* m_image_in;
-    void* m_image_out;
 }
 
 - (void)setWindow:(NSWindow*)window {
@@ -91,7 +88,7 @@
 }
 
 - (void)drawFrame {
-    LFX_RenderEffect(m_context, m_effect, &m_texture_in, &m_texture_out, m_image_out);
+    LFX_RenderEffect(m_context, m_effect, NULL, &m_texture_out, NULL);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_target_width, m_target_height);
@@ -115,72 +112,69 @@
     sprintf(path, "%s/%s", res_dir, "assets/effect.lua");
     LFX_LoadEffect(m_context, path, &m_effect);
     
-    sprintf(path, "%s/%s", res_dir, "assets/input/1280x720.jpg");
-    LFX_LoadTexture2D(m_context, path, &m_texture_in);
-    
-    m_image_in = malloc(m_texture_in.width * m_texture_in.height * 4);
-    GLuint fbo = 0;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_texture_in.target, m_texture_in.id, 0);
-    glReadPixels(0, 0, m_texture_in.width, m_texture_in.height, m_texture_in.format, GL_UNSIGNED_BYTE, m_image_in);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteFramebuffers(1, &fbo);
-    
     memset(&m_texture_out, 0, sizeof(m_texture_out));
     m_texture_out.target = GL_TEXTURE_2D;
     m_texture_out.format = GL_RGBA;
-    m_texture_out.width = m_texture_in.width;
-    m_texture_out.height = m_texture_in.height;
+    m_texture_out.width = 1080;
+    m_texture_out.height = 1920;
     m_texture_out.filter_mode = GL_LINEAR;
     m_texture_out.wrap_mode = GL_CLAMP_TO_EDGE;
     LFX_CreateTexture(m_context, &m_texture_out);
     
-    m_image_out = malloc(m_texture_out.width * m_texture_out.height * 4);
-    
-    [self resizeWindow:m_texture_in.width :m_texture_in.height];
+    [self resizeWindow:m_texture_out.width :m_texture_out.height];
 }
 
 - (void)doneContext {
-    free(m_image_in);
-    free(m_image_out);
-    LFX_DestroyTexture(m_context, &m_texture_in);
     LFX_DestroyTexture(m_context, &m_texture_out);
     LFX_DestroyEffect(m_context, m_effect);
     LFX_DestroyContext(m_context);
 }
 
-- (void)resizeWindow:(int)input_width :(int)input_height {
+- (void)resizeWindow:(int)width :(int)height {
     NSScreen* screen = NSScreen.mainScreen;
-    NSRect screen_rect = [screen convertRectToBacking:screen.visibleFrame];
+    NSSize max_size = [screen convertRectToBacking:screen.visibleFrame].size;
     
-    const int MAX_W = screen_rect.size.width;
-    const int MAX_H = screen_rect.size.height;
-    int w = input_width;
-    int h = input_height;
+    const int MAX_W = max_size.width;
+    const int MAX_H = max_size.height;
+    int w = width;
+    int h = height;
     float scale_w = 1.0f;
     float scale_h = 1.0f;
-    if (w > MAX_W)
-    {
+    if (w > MAX_W) {
         scale_w = MAX_W / (float) w;
     }
-    if (h > MAX_H)
-    {
+    if (h > MAX_H) {
         scale_h = MAX_H / (float) h;
     }
-    float scale = fmin(scale_w, scale_h);
+    float scale = fmin(scale_w, scale_h) * 0.9f;
     w = (int) (w * scale);
     h = (int) (h * scale);
+    
+    NSRect rect = NSMakeRect(0, 0, w, h);
+    NSRect frame = [_window frameRectForContentRect:rect];
+    [_window setFrame:frame display:TRUE animate:FALSE];
+    [_window center];
+    
+    NSRect result_rect = [_window contentRectForFrameRect:_window.frame];
+    if (result_rect.size.width < rect.size.width || result_rect.size.height < rect.size.height) {
+        if (result_rect.size.width / result_rect.size.height > rect.size.width / rect.size.height) {
+            w = (int) (result_rect.size.height * rect.size.width / rect.size.height);
+        } else {
+            h = (int) (result_rect.size.width * rect.size.height / rect.size.width);
+        }
+        
+        rect = NSMakeRect(0, 0, w, h);
+        frame = [_window frameRectForContentRect:rect];
+        [_window setFrame:frame display:TRUE animate:FALSE];
+        [_window center];
+    }
+    result_rect = [_window contentRectForFrameRect:_window.frame];
+    w = (int) result_rect.size.width;
+    h = (int) result_rect.size.height;
     
     float window_scale = _window.backingScaleFactor;
     m_target_width = (int) (w * window_scale);
     m_target_height = (int) (h * window_scale);
-    
-    NSRect rect = NSMakeRect(0, 0, w, h);
-    NSRect frame = [_window frameRectForContentRect:rect];
-    
-    [_window setFrame:frame display:TRUE animate:FALSE];
-    [_window center];
 }
 
 @end
