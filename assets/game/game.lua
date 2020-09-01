@@ -11,6 +11,7 @@ local Atlas = {
     RoundLineCenter = { 99, 300 - 16, 2, 32 },
     RoundLineRight = { 101, 300 - 16, 16, 32 },
     Fan = { 300 - 64, 500 - 64, 128, 128 },
+    Polygon_3 = { 300 - 64, 100 - 64, 128, 128 },
 }
 
 local Game = { }
@@ -184,6 +185,24 @@ function Game:DrawFan()
     x = self.canvas.width * (1.0 - 0.032)
     -- right fan
     self.canvas:DrawTexture(self.texture, x, y, w, h, Atlas.Fan[1], Atlas.Fan[2], Atlas.Fan[3], Atlas.Fan[4], self.fan_deg, { gray, gray, gray, 1 })
+
+    -- arrow
+    for i = 1, 2 do
+        for j = 1, 3 do
+            local t = math.abs(math.sin((self.fan_deg * 0.7 - (j - 1) * 60) * math.pi / 180))
+            gray = 49 / 255.0 + (96 / 255.0 - 49 / 255.0) * t
+            
+            w = self.canvas.width * 0.03
+            h = self.canvas.width * 0.02
+            if i == 1 then
+                x = self.canvas.width * 0.032
+            else
+                x = self.canvas.width * (1.0 - 0.032)
+            end
+            y = self.canvas.width * (1.54 - 0.025 * (j - 1))
+            self.canvas:DrawTexture(self.texture, x, y, w, h, Atlas.Polygon_3[1], Atlas.Polygon_3[2], Atlas.Polygon_3[3], Atlas.Polygon_3[4], 0, { gray, gray, gray, 1 })
+        end
+    end
 end
 
 function Game:DrawBall()
