@@ -14,6 +14,11 @@ local Atlas = {
     Polygon_3 = { 300 - 64, 100 - 64, 128, 128 },
 }
 
+local State = {
+    NotStart = 0,
+    WaitForShoot = 1,
+}
+
 local Game = { }
 
 function Game.New()
@@ -32,6 +37,9 @@ function Game:Init(context, effect)
     self.bottom_ground = nil
     self.bg_texture = nil
     self.bg_fbo = nil
+    self.balls = nil
+    self.state = State.NotStart
+    self.timestamp = 0
 end
 
 function Game:Done()
@@ -50,8 +58,6 @@ function Game:Done()
 end
 
 function Game:Render(input_texture, output_texture)
-    self:Update()
-
     if self.canvas == nil or self.canvas.width ~= output_texture.width or self.canvas.height ~= output_texture.height then
         if self.canvas then
             self.canvas:Done()
@@ -61,17 +67,19 @@ function Game:Render(input_texture, output_texture)
         self.canvas:Init(self.context, output_texture.width, output_texture.height)
     end
 
+    if self.state == State.NotStart then
+        self:Start()
+    end
+
     self:PreDrawMainUI()
+
+    self:Update()
 
     self.canvas:DrawBegin()
     self:DrawMainUI()
     self:DrawFan()
     self:DrawBall()
     self.canvas:DrawEnd()
-end
-
-function Game:Update()
-    self.fan_deg = self.fan_deg + 8
 end
 
 function Game:PreDrawMainUI()
@@ -206,20 +214,79 @@ function Game:DrawFan()
 end
 
 function Game:DrawBall()
-    -- circle test
-    local r = self.canvas.width * 0.03
-    local w = r
-    local h = r
-    if self.deg == nil then
-        self.deg = -15
+    for i = 1, #self.balls do
+        local ball = self.balls[i]
+        local r = self.canvas.width * 0.04
+        local w = r
+        local h = r
+        local x = ball.pos[1]
+        local y = ball.pos[2]
+        self.canvas:DrawTexture(self.texture, x, y, w, h, Atlas.Circle[1], Atlas.Circle[2], Atlas.Circle[3], Atlas.Circle[4])
     end
-    self.deg = self.deg + 0.1
-    if self.deg > 15 then
-        self.deg = -15
+
+    do
+        -- circle test
+        local r = self.canvas.width * 0.03
+        local w = r
+        local h = r
+        if self.deg == nil then
+            self.deg = -15
+        end
+        self.deg = self.deg + 0.1
+        if self.deg > 15 then
+            self.deg = -15
+        end
+        local x = self.canvas.width / 2 + self.bottom_ground.circle_r * math.sin(self.deg * math.pi / 180)
+        local y = self.bottom_ground.circle_y + self.bottom_ground.circle_r * math.cos(self.deg * math.pi / 180) - r / 2 - self.bottom_ground.circle_line_w / 2
+        self.canvas:DrawTexture(self.texture, x, y, w, h, Atlas.Circle[1], Atlas.Circle[2], Atlas.Circle[3], Atlas.Circle[4])
     end
-    local x = self.canvas.width / 2 + self.bottom_ground.circle_r * math.sin(self.deg * math.pi / 180)
-    local y = self.bottom_ground.circle_y + self.bottom_ground.circle_r * math.cos(self.deg * math.pi / 180) - r / 2 - self.bottom_ground.circle_line_w / 2
-    self.canvas:DrawTexture(self.texture, x, y, w, h, Atlas.Circle[1], Atlas.Circle[2], Atlas.Circle[3], Atlas.Circle[4])
+end
+
+function Game:Update()
+    self.fan_deg = self.fan_deg + 8
+end
+
+function Game:Start()
+    self.balls = { }
+
+    local ball = {
+        pos = { self.canvas.width * 0.5, self.canvas.width * 0.27 },
+        scale = 1.0,
+        velocity = { 0, 0 },
+    }
+    self.balls[1] = ball
+
+    self.state = State.WaitForShoot
+end
+
+function Game:SendMessage(message_id, message)
+    local msg = LFX_JsonParse(message)
+
+    if message_id == LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP then
+        self:SetTimestamp(msg)
+    elseif message_id == LFX_MESSAGE_ID_MOUSE_DOWN then
+        self:MouseDown(msg)
+    elseif message_id == LFX_MESSAGE_ID_MOUSE_UP then
+        self:MouseUp(msg)
+    elseif message_id == LFX_MESSAGE_ID_MOUSE_MOVE then
+        self:MouseMove(msg)
+    end
+end
+
+function Game:SetTimestamp(msg)
+    self.timestamp = math.floor(msg.timestamp)
+end
+
+function Game:MouseDown(msg)
+    print(msg.x, msg.y)
+end
+
+function Game:MouseUp(msg)
+    print(msg.x, msg.y)
+end
+
+function Game:MouseMove(msg)
+    print(msg.x, msg.y)
 end
 
 local game = nil
@@ -237,5 +304,9 @@ return {
 
     Render = function(context, effect, input_texture, output_texture)
         game:Render(input_texture, output_texture)
+    end,
+
+    SendMessage = function(context, effect, message_id, message)
+        return game:SendMessage(message_id, message)
     end,
 }

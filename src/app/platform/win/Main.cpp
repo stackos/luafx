@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <windowsx.h>
 #include "gl_include.h"
 #include "luafx.h"
 
@@ -178,10 +179,26 @@ static void Done()
 static void SendMessageSetEffectTimestamp()
 {
     int64_t timestamp = timeGetTime() - g_start_time;
-
     sprintf(g_message_buffer, "{\"timestamp\": %lld}", timestamp);
-
     LFX_SendEffectMessage(g_context, g_effect, LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP, g_message_buffer, NULL, 0);
+}
+
+static void SendMessageMouseDown(int x, int y)
+{
+    sprintf(g_message_buffer, "{\"x\": %d, \"y\": %d}", x, y);
+    LFX_SendEffectMessage(g_context, g_effect, LFX_MESSAGE_ID_MOUSE_DOWN, g_message_buffer, NULL, 0);
+}
+
+static void SendMessageMouseUp(int x, int y)
+{
+    sprintf(g_message_buffer, "{\"x\": %d, \"y\": %d}", x, y);
+    LFX_SendEffectMessage(g_context, g_effect, LFX_MESSAGE_ID_MOUSE_UP, g_message_buffer, NULL, 0);
+}
+
+static void SendMessageMouseMove(int x, int y)
+{
+    sprintf(g_message_buffer, "{\"x\": %d, \"y\": %d}", x, y);
+    LFX_SendEffectMessage(g_context, g_effect, LFX_MESSAGE_ID_MOUSE_MOVE, g_message_buffer, NULL, 0);
 }
 
 static bool DrawFrame()
@@ -227,6 +244,30 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
                 g_gl_context.minimized = 0;
             }
             break;
+
+        case WM_LBUTTONDOWN:
+        {
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
+            SendMessageMouseDown(x, y);
+            break;
+        }
+
+        case WM_LBUTTONUP:
+        {
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
+            SendMessageMouseUp(x, y);
+            break;
+        }
+
+        case WM_MOUSEMOVE:
+        {
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
+            SendMessageMouseMove(x, y);
+            break;
+        }
 
         case WM_CLOSE:
             Done();

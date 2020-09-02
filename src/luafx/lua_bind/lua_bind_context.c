@@ -171,6 +171,9 @@ static const DefineReg context_defines[] = {
 
     // LFX_MESSAGE_ID
     REG_DEF(LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP),
+    REG_DEF(LFX_MESSAGE_ID_MOUSE_DOWN),
+    REG_DEF(LFX_MESSAGE_ID_MOUSE_UP),
+    REG_DEF(LFX_MESSAGE_ID_MOUSE_MOVE),
 };
 
 void LFX_LuaBindContext(lua_State* L)

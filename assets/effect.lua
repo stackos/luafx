@@ -10,7 +10,6 @@ local BuildPlatformNames = {
 }
 
 local _effect = {
-    timestamp = 0,
     --demo = require("demo/demo_triangle"),
     --demo = require("demo/demo_cube"),
     --demo = require("demo/demo_depth_texture"),
@@ -44,9 +43,8 @@ local _effect = {
         self.demo.Render(context, effect, input_texture, output_texture)
     end,
 
-    SetTimestamp = function(self, context, effect, message)
-        local msg = LFX_JsonParse(message)
-        self.timestamp = math.floor(msg.timestamp)
+    SendMessage = function(self, context, effect, message_id, message)
+        return self.demo.SendMessage(context, effect, message_id, message)
     end,
 }
 
@@ -68,7 +66,5 @@ function Effect_Render(context, effect, input_texture, output_texture)
 end
 
 function Effect_SendMessage(context, effect, message_id, message)
-    if message_id == LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP then
-        _effect:SetTimestamp(context, effect, message)
-    end
+    return _effect:SendMessage(context, effect, message_id, message)
 end

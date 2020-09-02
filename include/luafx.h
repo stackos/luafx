@@ -82,6 +82,9 @@ LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP message content sample:
 }
 */
 #define LFX_MESSAGE_ID_SET_EFFECT_TIMESTAMP -1
+#define LFX_MESSAGE_ID_MOUSE_DOWN -2
+#define LFX_MESSAGE_ID_MOUSE_UP -3
+#define LFX_MESSAGE_ID_MOUSE_MOVE -4
 
 typedef LFX_RESULT (*LFX_EFFECT_MESSAGE_CALLBACK)(LFX_MESSAGE_ID message_id, const char* message, char* reply_buffer, int reply_buffer_size);
 typedef void (*LFX_LOG_CALLBACK)(const char* message);
