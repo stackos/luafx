@@ -104,7 +104,7 @@ public class MainActivity extends Activity {
     }
 
     private void setCameraView() {
-        extractAssetsDirs(new String[] { "assets", "assets/demo", "assets/input", "assets/lua_lib", "assets/font" });
+        extractAssetsDirs(new String[] { "assets", "assets/demo", "assets/input", "assets/lua_lib", "assets/font", "assets/game" });
 
         mLayout = new RelativeLayout(this);
         mGLView = new GLView(this);
