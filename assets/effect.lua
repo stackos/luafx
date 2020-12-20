@@ -14,8 +14,8 @@ local _effect = {
     --demo = require("demo/demo_cube"),
     --demo = require("demo/demo_depth_texture"),
     --demo = require("demo/demo_instance"),
-    --demo = require("demo/demo_canvas"),
-    demo = require("game/game"),
+    demo = require("demo/demo_canvas"),
+    --demo = require("game/game"),
 
     Init = function(self, context, effect)
         local build_platform = LFX_BinaryString(4)
@@ -44,7 +44,9 @@ local _effect = {
     end,
 
     SendMessage = function(self, context, effect, message_id, message)
-        return self.demo.SendMessage(context, effect, message_id, message)
+        if self.demo.SendMessage then
+            return self.demo.SendMessage(context, effect, message_id, message)
+        end
     end,
 }
 
