@@ -141,8 +141,8 @@ static void InitEffectContext()
     memset(&g_texture_out, 0, sizeof(g_texture_out));
     g_texture_out.target = GL_TEXTURE_2D;
     g_texture_out.format = GL_RGBA;
-    g_texture_out.width = 1080;
-    g_texture_out.height = 1920;
+    g_texture_out.width = 1280;
+    g_texture_out.height = 720;
     g_texture_out.filter_mode = GL_LINEAR;
     g_texture_out.wrap_mode = GL_CLAMP_TO_EDGE;
     LFX_CreateTexture(g_context, &g_texture_out);

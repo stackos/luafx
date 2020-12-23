@@ -6,6 +6,7 @@ local _font = nil
 local _canvas = nil
 local _label = nil
 local _texture = nil
+local _texture2 = nil
 
 local DemoInit = function(context, effect)
     LOGD("DemoInit demo_canvas")
@@ -15,6 +16,7 @@ local DemoInit = function(context, effect)
     _font:Init(context, font_path, 20, 2)
 
     _texture = gl.LoadTexture(context, LFX_Effect_GetEffectDir(effect) .. "/input/1080x1920.jpg", GL_LINEAR, GL_CLAMP_TO_EDGE)
+    _texture2 = gl.LoadTexture(context, LFX_Effect_GetEffectDir(effect) .. "/input/1280x720.jpg", GL_LINEAR, GL_CLAMP_TO_EDGE)
 end
 
 local DemoDone = function(context, effect)
@@ -22,6 +24,9 @@ local DemoDone = function(context, effect)
 
     if _texture then
         gl.DestroyTexture(context, _texture)
+    end
+    if _texture2 then
+        gl.DestroyTexture(context, _texture2)
     end
     _font:Done()
     if _canvas then
@@ -44,6 +49,7 @@ local DemoRender = function(context, effect, input_texture, output_texture)
     end
 
     _canvas:DrawBegin()
+    _canvas:DrawTexture(_texture2, output_texture.width / 2, output_texture.height / 2, output_texture.width, output_texture.height)
     for i = 1, 10 do
         for j = 1, 5 do
             _canvas:DrawTexture(_texture,

@@ -139,39 +139,47 @@ function Canvas:CreateText(str, font, bold_text_mesh)
         ::continue::
     end
 
-    local vertex_buffer = LFX_Float32ArrayCreateFromTable(vertices)
-    local index_buffer = LFX_Uint16ArrayCreateFromTable(indices)
-
-    local pvbo = LFX_BinaryString(4)
-    glGenBuffers(1, pvbo)
-    local vbo = string.unpack("i", pvbo)
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo)
-    glBufferData(GL_ARRAY_BUFFER, #vertices * 4, vertex_buffer, GL_STATIC_DRAW)
-    glBindBuffer(GL_ARRAY_BUFFER, 0)
-
-    local pibo = LFX_BinaryString(4)
-    glGenBuffers(1, pibo)
-    local ibo = string.unpack("i", pibo)
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, #indices * 2, index_buffer, GL_STATIC_DRAW)
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
-
-    LFX_Free(vertex_buffer)
-    LFX_Free(index_buffer)
-
     local text_mesh = {
         text = str,
         font = font,
         vertices = vertices,
         indices = indices,
         rect = rect,
-        pvbo = pvbo,
-        pibo = pibo,
-        vbo = vbo,
-        ibo = ibo,
+        pvbo = nil,
+        pibo = nil,
+        vbo = nil,
+        ibo = nil,
+        bold_text_mesh = nil,
     }
+
+    if #vertices > 0 and #indices > 0 then
+        local vertex_buffer = LFX_Float32ArrayCreateFromTable(vertices)
+        local index_buffer = LFX_Uint16ArrayCreateFromTable(indices)
+
+        local pvbo = LFX_BinaryString(4)
+        glGenBuffers(1, pvbo)
+        local vbo = string.unpack("i", pvbo)
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(GL_ARRAY_BUFFER, #vertices * 4, vertex_buffer, GL_STATIC_DRAW)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+        local pibo = LFX_BinaryString(4)
+        glGenBuffers(1, pibo)
+        local ibo = string.unpack("i", pibo)
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, #indices * 2, index_buffer, GL_STATIC_DRAW)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+
+        LFX_Free(vertex_buffer)
+        LFX_Free(index_buffer)
+
+        text_mesh.pvbo = pvbo
+        text_mesh.pibo = pibo
+        text_mesh.vbo = vbo
+        text_mesh.ibo = ibo
+    end
 
     if font.bold_size > 0 then
         if bold_text_mesh == nil or bold_text_mesh == false then
@@ -197,6 +205,10 @@ function Canvas:DrawBegin()
 end
 
 function Canvas:DrawText(text_mesh, x, y, color, outline_color)
+    if #text_mesh.text == 0 then
+        return
+    end
+
     local cmd = {
         type = DrawCmd.DrawText,
         text_mesh = text_mesh,
@@ -352,6 +364,10 @@ function Canvas:DrawTextSingle(cmd)
     local vbo = text_mesh.vbo
     local ibo = text_mesh.ibo
     local program = self.text_program
+
+    if font:GetTexture() == nil then
+        return
+    end
 
     -- state
     glEnable(GL_BLEND)
